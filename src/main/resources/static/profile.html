@@ -177,7 +177,9 @@
             <div class="title-badge" id="prof-current-title">称号なし</div>
             <button class="btn-change-title" onclick="openTitleModal()">称号を変更</button>
 
-            <button class="btn-back" style="width: 100%; margin-top: auto;" onclick="alert('スキン変更機能は未実装です')">スキン変更</button>
+            <button class="btn-back" style="width: 100%; margin-top: auto;" onclick="location.href='shop.html'">👗 着せ替え</button>
+            <button class="btn-back" style="width: 100%; margin-top: 8px;" onclick="openPassModal()">🔑 パスワード変更</button>
+            <button class="btn-back" style="width: 100%; margin-top: 8px; border-color:#9b2c2c; color:#feb2b2;" onclick="logout()">ログアウト</button>
         </div>
 
         <!-- 右カラム -->
@@ -230,10 +232,25 @@
     <div id="name-modal" class="modal-overlay">
         <div class="edit-modal">
             <div style="color: #c9a050; font-weight: bold; font-size: 16px;">プレイヤー名の変更</div>
-            <input type="text" id="new-name-input" class="edit-input" maxlength="12" placeholder="新しい名前を入力">
+            <input type="text" id="new-name-input" class="edit-input" maxlength="20" placeholder="新しい名前を入力">
             <div style="display: flex; gap: 10px;">
                 <button class="btn-back" style="flex: 1;" onclick="closeNameModal()">キャンセル</button>
                 <button class="btn-back" style="flex: 1; background: #c9a050; color: #080d19;" onclick="saveName()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- パスワード変更モーダル -->
+    <div id="pass-modal" class="modal-overlay">
+        <div class="edit-modal">
+            <div style="color: #c9a050; font-weight: bold; font-size: 16px;">パスワードの変更</div>
+            <input type="password" id="pass-current" class="edit-input" maxlength="64" placeholder="今のパスワード" autocomplete="current-password">
+            <input type="password" id="pass-new" class="edit-input" maxlength="64" placeholder="新しいパスワード（4文字以上）" autocomplete="new-password">
+            <input type="password" id="pass-new2" class="edit-input" maxlength="64" placeholder="新しいパスワード（確認）" autocomplete="new-password">
+            <div id="pass-msg" style="font-size: 13px; min-height: 18px; color: #ff9aa9;"></div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-back" style="flex: 1;" onclick="closePassModal()">キャンセル</button>
+                <button class="btn-back" id="pass-save" style="flex: 1; background: #c9a050; color: #080d19;" onclick="savePassword()">変更する</button>
             </div>
         </div>
     </div>
@@ -332,6 +349,52 @@
             } catch (e) {
                 console.error('UserData Load Error:', e);
             }
+        }
+
+        // --- パスワード変更 ---
+        function openPassModal() {
+            ['pass-current', 'pass-new', 'pass-new2'].forEach((id) => { document.getElementById(id).value = ''; });
+            document.getElementById('pass-msg').textContent = '';
+            document.getElementById('pass-modal').style.display = 'flex';
+            document.getElementById('pass-current').focus();
+        }
+        function closePassModal() { document.getElementById('pass-modal').style.display = 'none'; }
+        async function savePassword() {
+            const msg = document.getElementById('pass-msg');
+            const current = document.getElementById('pass-current').value;
+            const next = document.getElementById('pass-new').value;
+            const next2 = document.getElementById('pass-new2').value;
+            msg.style.color = '#ff9aa9';
+            if (!current || !next) return (msg.textContent = 'すべて入力してください');
+            if (next.length < 4) return (msg.textContent = '新しいパスワードは4文字以上にしてください');
+            if (next !== next2) return (msg.textContent = '確認用のパスワードが一致しません');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const btn = document.getElementById('pass-save');
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/auth/password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: user.id, currentPassword: current, newPassword: next })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) return (msg.textContent = data.message || '変更できませんでした');
+                msg.style.color = '#9ae6b4';
+                msg.textContent = data.message || 'パスワードを変更しました';
+                setTimeout(closePassModal, 1200);
+            } catch (e) {
+                msg.textContent = 'サーバーに接続できませんでした';
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // ログアウト: 進行をサーバーに保存してから、この端末のログイン情報を消す
+        async function logout() {
+            if (!confirm('ログアウトしますか？')) return;
+            if (window.GameSync) await GameSync.push(false);
+            localStorage.removeItem('user');
+            location.href = 'login.html';
         }
 
         // --- 名前変更モーダルのロジック ---

@@ -3,318 +3,352 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CARD GAME - ログイン</title>
+    <title>Gothic Duel - ログイン</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif;
-            background: #080d19;
-            color: #ffffff;
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
+            font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+            min-height: 100vh; display: flex; justify-content: center; align-items: center;
+            color: #f1e6cf; padding: 24px;
+            background:
+                radial-gradient(circle at 50% 30%, rgba(80, 30, 110, 0.35), transparent 60%),
+                radial-gradient(circle at 80% 90%, rgba(120, 20, 40, 0.25), transparent 50%),
+                linear-gradient(160deg, #0b0714 0%, #04020a 100%);
         }
+        .card {
+            width: 100%; max-width: 420px; padding: 28px 28px 22px; border-radius: 16px;
+            background: rgba(14, 9, 24, 0.92); border: 1px solid rgba(201, 160, 80, 0.55);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(201, 160, 80, 0.08);
+        }
+        .logo { text-align: center; margin-bottom: 18px; }
+        .logo h1 { font-family: 'Cinzel Decorative', 'Times New Roman', serif; font-size: 30px; color: #ffd76b; letter-spacing: 2px; text-shadow: 0 0 18px rgba(255, 215, 107, 0.35); }
+        .logo p { font-size: 13px; color: #a792ba; margin-top: 4px; }
 
-        /* 背景レイヤー */
-        .bg-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 50% 40%, rgba(20, 35, 60, 0.8) 0%, rgba(5, 8, 16, 0.95) 75%),
-                        linear-gradient(135deg, #091224 0%, #03060c 100%);
-            z-index: 1;
-            pointer-events: none;
-        }
+        .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 18px; background: rgba(255,255,255,0.04); padding: 4px; border-radius: 10px; }
+        .tab { padding: 10px; border: none; border-radius: 8px; background: transparent; color: #a792ba; font-size: 15px; font-weight: 700; cursor: pointer; }
+        .tab.active { background: linear-gradient(135deg, #c9a050, #8a5a00); color: #1a1004; }
 
-        /* 粒子アニメーション */
-        .particles {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: radial-gradient(rgba(0, 212, 255, 0.15) 1px, transparent 1px);
-            background-size: 32px 32px;
-            animation: particleMove 20s linear infinite;
-            z-index: 2;
-            opacity: 0.6;
-            pointer-events: none;
-        }
+        .continue { display: none; padding: 14px; border-radius: 10px; margin-bottom: 16px; border: 1px solid rgba(72, 187, 120, 0.5); background: rgba(72, 187, 120, 0.08); text-align: center; }
+        .continue p { font-size: 14px; margin-bottom: 10px; }
+        .continue b { color: #9ae6b4; }
 
-        @keyframes particleMove {
-            0% { background-position: 0 0; }
-            100% { background-position: 320px 640px; }
+        form { display: flex; flex-direction: column; gap: 14px; }
+        form.hidden { display: none; }
+        label { display: block; font-size: 13px; color: #d8ccb0; margin-bottom: 6px; font-weight: 600; }
+        .field { position: relative; }
+        input[type=text], input[type=password] {
+            width: 100%; padding: 12px 44px 12px 14px; border-radius: 10px; font-size: 16px;
+            border: 1px solid rgba(201, 160, 80, 0.35); background: rgba(0, 0, 0, 0.45); color: #fff; outline: none;
+            transition: border-color .15s, box-shadow .15s;
         }
+        input:focus { border-color: #ffd76b; box-shadow: 0 0 0 3px rgba(255, 215, 107, 0.15); }
+        input.ok { border-color: #48bb78; }
+        input.ng { border-color: #e65c71; }
+        .eye {
+            position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+            width: 34px; height: 34px; border: none; border-radius: 8px; background: transparent; color: #a792ba; font-size: 18px; cursor: pointer;
+        }
+        .eye:hover { background: rgba(255, 255, 255, 0.06); color: #ffd76b; }
+        .note { font-size: 12px; margin-top: 5px; min-height: 16px; color: #a792ba; }
+        .note.ok { color: #9ae6b4; }
+        .note.ng { color: #ff9aa9; }
+        .caps { display: none; font-size: 12px; color: #ffd76b; margin-top: 5px; }
+        .meter { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.08); margin-top: 6px; overflow: hidden; }
+        .meter div { height: 100%; width: 0; transition: width .2s, background .2s; }
+        .row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #d8ccb0; }
+        .row input { accent-color: #c9a050; margin-right: 6px; }
 
-        /* UIオーバーレイ */
-        .ui-container {
-            position: relative;
-            z-index: 100;
-            width: 100%;
-            max-width: 500px;
-            padding: 20px;
+        .btn {
+            width: 100%; padding: 13px; border-radius: 10px; font-size: 16px; font-weight: 800; cursor: pointer;
+            border: 1px solid #ffd76b; background: linear-gradient(135deg, #c9a050, #8a5a00); color: #1a1004;
+            display: flex; justify-content: center; align-items: center; gap: 8px;
         }
+        .btn:hover:not(:disabled) { filter: brightness(1.1); }
+        .btn:disabled { opacity: 0.6; cursor: wait; }
+        .btn.sub { background: transparent; color: #ffd76b; border-color: rgba(201, 160, 80, 0.5); font-weight: 700; }
+        .spinner { width: 16px; height: 16px; border: 2px solid rgba(0,0,0,.25); border-top-color: #1a1004; border-radius: 50%; animation: spin .8s linear infinite; display: none; }
+        .btn.loading .spinner { display: inline-block; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* モーダルウィンドウ */
-        .modal-card {
-            background: rgba(14, 23, 38, 0.92);
-            border: 1px solid rgba(212, 175, 55, 0.6);
-            border-radius: 8px;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.9), inset 0 0 15px rgba(212, 175, 55, 0.15);
-            padding: 32px;
-            backdrop-filter: blur(12px);
-            position: relative;
-            text-align: center;
-        }
-
-        .modal-card::before, .modal-card::after {
-            content: '';
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            border: 2px solid #d4af37;
-            pointer-events: none;
-        }
-        .modal-card::before {
-            top: 4px;
-            left: 4px;
-            border-right: none;
-            border-bottom: none;
-        }
-        .modal-card::after {
-            bottom: 4px;
-            right: 4px;
-            border-left: none;
-            border-top: none;
-        }
-
-        .modal-title {
-            font-size: 20px;
-            letter-spacing: 2px;
-            color: #f3e5ab;
-            margin-bottom: 24px;
-            text-shadow: 0 0 8px rgba(212, 175, 55, 0.5);
-            font-weight: 600;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-            padding-bottom: 12px;
-        }
-
-        .input-group {
-            margin-bottom: 18px;
-            text-align: left;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-size: 13px;
-            color: #c0c9d6;
-            letter-spacing: 0.5px;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 12px 14px;
-            background: rgba(8, 14, 26, 0.85);
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 4px;
-            color: #ffffff;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.2s;
-            user-select: text;
-        }
-
-        .input-group input:focus {
-            border-color: #00d4ff;
-            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 16px;
-            margin-top: 28px;
-        }
-
-        .game-btn {
-            flex: 1;
-            padding: 12px 0;
-            font-size: 15px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            color: #ffffff;
-            background: linear-gradient(180deg, #1f3a5f 0%, #0d1e34 100%);
-            border: 1px solid #4a7bb0;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-        }
-
-        .game-btn:hover {
-            background: linear-gradient(180deg, #2b4e7e 0%, #132b4a 100%);
-            border-color: #00d4ff;
-            box-shadow: 0 0 12px rgba(0, 212, 255, 0.4);
-        }
-
-        .game-btn.primary {
-            background: linear-gradient(180deg, #9a2b3c 0%, #5c1420 100%);
-            border-color: #e65c71;
-        }
-
-        .game-btn.primary:hover {
-            background: linear-gradient(180deg, #b8354a 0%, #751b2a 100%);
-            border-color: #ff8597;
-            box-shadow: 0 0 12px rgba(255, 107, 129, 0.4);
-        }
-
-        .message-box {
-            font-size: 13px;
-            margin-bottom: 16px;
-            padding: 10px;
-            border-radius: 4px;
-            display: none;
-        }
-
-        .message-box.error {
-            background: rgba(231, 76, 60, 0.2);
-            color: #ff6b6b;
-            border: 1px solid #e74c3c;
-        }
-
-        .message-box.success {
-            background: rgba(46, 204, 113, 0.2);
-            color: #2ecc71;
-            border: 1px solid #2ecc71;
-        }
-
-        .game-version {
-            position: absolute;
-            bottom: 16px;
-            right: 20px;
-            font-size: 12px;
-            color: #606d80;
-            z-index: 10;
-        }
-
-        .top-menu-btn {
-            position: absolute;
-            top: 16px;
-            left: 20px;
-            background: rgba(14, 23, 38, 0.7);
-            border: 1px solid rgba(212, 175, 55, 0.4);
-            color: #d4af37;
-            padding: 6px 14px;
-            font-size: 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            z-index: 10;
-        }
+        .msg { display: none; padding: 10px 12px; border-radius: 8px; font-size: 14px; line-height: 1.5; margin-bottom: 14px; }
+        .msg.error { display: block; background: rgba(230, 92, 113, 0.12); border: 1px solid rgba(230, 92, 113, 0.5); color: #ffc2cb; }
+        .msg.success { display: block; background: rgba(72, 187, 120, 0.12); border: 1px solid rgba(72, 187, 120, 0.5); color: #c6f6d5; }
+        .msg.info { display: block; background: rgba(120, 140, 255, 0.1); border: 1px solid rgba(140, 160, 255, 0.4); color: #cdd6ff; }
+        .msg small { display: block; opacity: 0.85; margin-top: 2px; }
+        .foot { text-align: center; font-size: 12px; color: #6f6382; margin-top: 16px; }
+        .link { background: none; border: none; color: #ffd76b; cursor: pointer; font-size: 13px; text-decoration: underline; }
     </style>
 </head>
 <body>
-
-    <div class="bg-layer"></div>
-    <div class="particles"></div>
-
-    <button class="top-menu-btn">メニュー</button>
-    <div class="game-version">Ver.1.0.0</div>
-
-    <div class="ui-container">
-        <div class="modal-card">
-            <div class="modal-title">ACCOUNT LOGIN / プレイヤー認証</div>
-
-            <div id="msg-box" class="message-box"></div>
-
-            <div class="input-group">
-                <label for="username">ユーザー名（メールアドレス）</label>
-                <input type="text" id="username" placeholder="ユーザー名を入力" required autocomplete="username">
-            </div>
-
-            <div class="input-group">
-                <label for="password">パスワード</label>
-                <input type="password" id="password" placeholder="パスワードを入力" required autocomplete="current-password">
-            </div>
-
-            <div class="btn-group">
-                <button type="button" class="game-btn primary" onclick="handleLogin()">ログイン</button>
-                <button type="button" class="game-btn" onclick="handleRegister()">新規会員登録</button>
-            </div>
+    <main class="card">
+        <div class="logo">
+            <h1>Gothic Duel</h1>
+            <p>夜の決闘者よ、名を名乗れ</p>
         </div>
-    </div>
+
+        <!-- すでにログインしている時 -->
+        <div class="continue" id="continue">
+            <p><b id="continue-name"></b> さんでログイン中です</p>
+            <button type="button" class="btn" onclick="location.href='home.html'">続きから遊ぶ</button>
+            <button type="button" class="link" style="margin-top:8px" onclick="switchAccount()">別のアカウントでログイン</button>
+        </div>
+
+        <div class="tabs" role="tablist">
+            <button type="button" class="tab active" id="tab-login" role="tab" onclick="showTab('login')">ログイン</button>
+            <button type="button" class="tab" id="tab-register" role="tab" onclick="showTab('register')">新規登録</button>
+        </div>
+
+        <div id="msg" class="msg" role="alert"></div>
+
+        <!-- ログイン -->
+        <form id="form-login" autocomplete="on" novalidate>
+            <div>
+                <label for="login-name">ユーザー名</label>
+                <div class="field"><input type="text" id="login-name" autocomplete="username" maxlength="20" placeholder="登録したユーザー名"></div>
+            </div>
+            <div>
+                <label for="login-pass">パスワード</label>
+                <div class="field">
+                    <input type="password" id="login-pass" autocomplete="current-password" maxlength="64" placeholder="パスワード">
+                    <button type="button" class="eye" data-for="login-pass" title="パスワードを表示">👁</button>
+                </div>
+                <div class="caps" id="login-caps">⚠ Caps Lock がオンになっています</div>
+            </div>
+            <div class="row">
+                <label style="margin:0;font-weight:400"><input type="checkbox" id="remember" checked>ユーザー名を記憶する</label>
+            </div>
+            <button type="submit" class="btn" id="btn-login"><span class="spinner"></span><span>ログイン</span></button>
+            <button type="button" class="btn sub" onclick="showTab('register')">はじめての方はこちら（新規登録）</button>
+        </form>
+
+        <!-- 新規登録 -->
+        <form id="form-register" class="hidden" autocomplete="on" novalidate>
+            <div>
+                <label for="reg-name">ユーザー名 <small style="color:#a792ba;font-weight:400">（20文字まで・ゲーム内の名前になります）</small></label>
+                <div class="field"><input type="text" id="reg-name" autocomplete="username" maxlength="20" placeholder="例：夜の決闘者"></div>
+                <div class="note" id="reg-name-note"></div>
+            </div>
+            <div>
+                <label for="reg-pass">パスワード <small style="color:#a792ba;font-weight:400">（4文字以上）</small></label>
+                <div class="field">
+                    <input type="password" id="reg-pass" autocomplete="new-password" maxlength="64" placeholder="4文字以上">
+                    <button type="button" class="eye" data-for="reg-pass" title="パスワードを表示">👁</button>
+                </div>
+                <div class="meter"><div id="reg-meter"></div></div>
+                <div class="note" id="reg-pass-note"></div>
+                <div class="caps" id="reg-caps">⚠ Caps Lock がオンになっています</div>
+            </div>
+            <div>
+                <label for="reg-pass2">パスワード（確認）</label>
+                <div class="field">
+                    <input type="password" id="reg-pass2" autocomplete="new-password" maxlength="64" placeholder="もう一度入力">
+                    <button type="button" class="eye" data-for="reg-pass2" title="パスワードを表示">👁</button>
+                </div>
+                <div class="note" id="reg-pass2-note"></div>
+            </div>
+            <button type="submit" class="btn" id="btn-register"><span class="spinner"></span><span>登録してはじめる</span></button>
+            <button type="button" class="btn sub" onclick="showTab('login')">アカウントを持っている方はこちら</button>
+        </form>
+
+        <div class="foot">パスワードは暗号化して保存されます／Ver.2.0</div>
+    </main>
 
     <script src="js/sync.js"></script>
     <script>
-        function showMessage(msg, isError) {
-            const box = document.getElementById('msg-box');
-            if (!box) return;
-            box.innerText = msg;
-            box.className = `message-box ${isError ? 'error' : 'success'}`;
-            box.style.display = 'block';
+        const $ = (id) => document.getElementById(id);
+        const NAME_MAX = 20, PASS_MIN = 4;
+        let busy = false;
+
+        // ---------- 表示 ----------
+        function showTab(tab) {
+            const login = tab === 'login';
+            $('tab-login').classList.toggle('active', login);
+            $('tab-register').classList.toggle('active', !login);
+            $('form-login').classList.toggle('hidden', !login);
+            $('form-register').classList.toggle('hidden', login);
+            clearMessage();
+            setTimeout(() => (login ? ($('login-name').value ? $('login-pass') : $('login-name')) : $('reg-name')).focus(), 0);
+            history.replaceState(null, '', login ? '#login' : '#register');
         }
 
-        // ログイン: 成功した時だけサーバーから返った user（id 付き）を保存してホームへ
-        async function handleLogin() {
-            const usernameInput = document.getElementById('username').value.trim();
-            const passwordInput = document.getElementById('password').value;
-
-            if (!usernameInput || !passwordInput) {
-                showMessage('ユーザー名とパスワードを入力してください', true);
-                return;
+        function showMessage(text, type = 'error', hint = '') {
+            const box = $('msg');
+            box.className = `msg ${type}`;
+            box.innerHTML = '';
+            box.append(document.createTextNode(text));
+            if (hint) {
+                const s = document.createElement('small');
+                s.textContent = hint;
+                box.append(s);
             }
+        }
+        function clearMessage() { $('msg').className = 'msg'; }
 
-            const result = await postAuth('/api/auth/login', usernameInput, passwordInput);
+        function setNote(id, text, state) {
+            const el = $(id);
+            el.textContent = text;
+            el.className = `note ${state || ''}`;
+        }
+        function mark(input, state) {
+            input.classList.toggle('ok', state === 'ok');
+            input.classList.toggle('ng', state === 'ng');
+        }
+
+        // パスワードの表示・非表示
+        document.querySelectorAll('.eye').forEach((b) => b.addEventListener('click', () => {
+            const input = $(b.dataset.for);
+            const show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            b.textContent = show ? '🙈' : '👁';
+            b.title = show ? 'パスワードを隠す' : 'パスワードを表示';
+            input.focus();
+        }));
+
+        // Caps Lock の注意
+        function watchCaps(inputId, noteId) {
+            const f = (e) => { if (e.getModifierState) $(noteId).style.display = e.getModifierState('CapsLock') ? 'block' : 'none'; };
+            $(inputId).addEventListener('keyup', f);
+            $(inputId).addEventListener('keydown', f);
+            $(inputId).addEventListener('blur', () => { $(noteId).style.display = 'none'; });
+        }
+        watchCaps('login-pass', 'login-caps');
+        watchCaps('reg-pass', 'reg-caps');
+
+        // ---------- 登録フォームのその場チェック ----------
+        let nameTimer = null, nameAvailable = null;
+        $('reg-name').addEventListener('input', () => {
+            const name = $('reg-name').value.trim();
+            nameAvailable = null;
+            clearTimeout(nameTimer);
+            if (!name) { setNote('reg-name-note', ''); mark($('reg-name')); return; }
+            if (name.length > NAME_MAX) { setNote('reg-name-note', `${NAME_MAX}文字以内にしてください`, 'ng'); mark($('reg-name'), 'ng'); return; }
+            setNote('reg-name-note', '確認中…');
+            nameTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`/api/auth/check?username=${encodeURIComponent(name)}`);
+                    const data = await res.json();
+                    if ($('reg-name').value.trim() !== name) return;
+                    nameAvailable = !!data.available;
+                    setNote('reg-name-note', data.available ? `「${name}」は使えます` : (data.message || '既に使われています'), data.available ? 'ok' : 'ng');
+                    mark($('reg-name'), data.available ? 'ok' : 'ng');
+                } catch (e) {
+                    setNote('reg-name-note', '');
+                }
+            }, 400);
+        });
+
+        function strength(p) {
+            let s = 0;
+            if (p.length >= PASS_MIN) s++;
+            if (p.length >= 8) s++;
+            if (/[a-z]/.test(p) && /[A-Z]/.test(p)) s++;
+            if (/\d/.test(p)) s++;
+            if (/[^A-Za-z0-9]/.test(p)) s++;
+            return s;
+        }
+        function checkPass() {
+            const p = $('reg-pass').value;
+            const p2 = $('reg-pass2').value;
+            const s = strength(p);
+            const colors = ['#e65c71', '#e65c71', '#ed8936', '#ecc94b', '#48bb78', '#38d39f'];
+            $('reg-meter').style.width = p ? `${Math.max(1, s) * 20}%` : '0';
+            $('reg-meter').style.background = colors[s];
+            if (!p) { setNote('reg-pass-note', ''); mark($('reg-pass')); }
+            else if (p.length < PASS_MIN) { setNote('reg-pass-note', `あと${PASS_MIN - p.length}文字`, 'ng'); mark($('reg-pass'), 'ng'); }
+            else if (p !== p.trim()) { setNote('reg-pass-note', '最初と最後に空白は使えません', 'ng'); mark($('reg-pass'), 'ng'); }
+            else { setNote('reg-pass-note', ['', '弱い', 'ふつう', 'やや強い', '強い', 'とても強い'][s], 'ok'); mark($('reg-pass'), 'ok'); }
+            if (!p2) { setNote('reg-pass2-note', ''); mark($('reg-pass2')); }
+            else if (p2 === p) { setNote('reg-pass2-note', '一致しました', 'ok'); mark($('reg-pass2'), 'ok'); }
+            else { setNote('reg-pass2-note', 'パスワードが一致しません', 'ng'); mark($('reg-pass2'), 'ng'); }
+        }
+        $('reg-pass').addEventListener('input', checkPass);
+        $('reg-pass2').addEventListener('input', checkPass);
+
+        // ---------- 送信 ----------
+        $('form-login').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = $('login-name').value.trim();
+            const password = $('login-pass').value;
+            if (!username) return fieldError('login-name', 'ユーザー名を入力してください');
+            if (!password) return fieldError('login-pass', 'パスワードを入力してください');
+
+            const result = await send('/api/auth/login', { username, password }, $('btn-login'), 'ログイン中…');
+            if (!result) return;
             if (!result.ok) {
-                showMessage(result.message || 'ログインに失敗しました', true);
+                showMessage(result.message || 'ログインに失敗しました', 'error', result.hint);
+                $('login-pass').select();
                 return;
             }
+            if ($('remember').checked) localStorage.setItem('lastUsername', username);
+            else localStorage.removeItem('lastUsername');
+            showMessage('ログインしました。ホームへ移動します…', 'success');
             await saveUser(result.data.user);
-            window.location.href = '/home.html';
-        }
+            location.href = 'home.html';
+        });
 
-        // 新規登録: 成功したらそのままログイン状態にしてホームへ
-        async function handleRegister() {
-            const usernameInput = document.getElementById('username').value.trim();
-            const passwordInput = document.getElementById('password').value;
+        $('form-register').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = $('reg-name').value.trim();
+            const password = $('reg-pass').value;
+            const password2 = $('reg-pass2').value;
+            if (!username) return fieldError('reg-name', 'ユーザー名を入力してください');
+            if (username.length > NAME_MAX) return fieldError('reg-name', `ユーザー名は${NAME_MAX}文字以内にしてください`);
+            if (nameAvailable === false) return fieldError('reg-name', 'そのユーザー名は使えません。別の名前にしてください');
+            if (password.length < PASS_MIN) return fieldError('reg-pass', `パスワードは${PASS_MIN}文字以上にしてください`);
+            if (password !== password.trim()) return fieldError('reg-pass', 'パスワードの最初と最後に空白は使えません');
+            if (password !== password2) return fieldError('reg-pass2', '確認用のパスワードが一致しません');
 
-            if (!usernameInput || !passwordInput) {
-                showMessage('ユーザー名とパスワードを入力してください', true);
-                return;
-            }
-
-            const result = await postAuth('/api/auth/register', usernameInput, passwordInput);
+            const result = await send('/api/auth/register', { username, password }, $('btn-register'), '登録中…');
+            if (!result) return;
             if (!result.ok) {
-                showMessage(result.message || '登録に失敗しました', true);
+                showMessage(result.message || '登録に失敗しました', 'error', result.hint);
                 return;
             }
-            showMessage(result.data.message || '登録が完了しました', false);
+            localStorage.setItem('lastUsername', username);
+            showMessage(result.data.message || '登録しました', 'success', 'ホームへ移動します…');
             await saveUser(result.data.user);
-            setTimeout(() => { window.location.href = '/home.html'; }, 600);
+            setTimeout(() => { location.href = 'home.html'; }, 700);
+        });
+
+        function fieldError(id, text) {
+            showMessage(text, 'error');
+            mark($(id), 'ng');
+            $(id).focus();
         }
 
-        async function postAuth(url, username, password) {
+        // サーバーへ送る。無料プランのサーバーは止まっていると起動に1分ほどかかるので、その間は案内を出す
+        async function send(url, body, button, loadingText) {
+            if (busy) return null;
+            busy = true;
+            const label = button.querySelector('span:last-child');
+            const original = label.textContent;
+            button.disabled = true;
+            button.classList.add('loading');
+            label.textContent = loadingText;
+            clearMessage();
+            const slow = setTimeout(() => showMessage('サーバーを起動しています…', 'info', 'しばらくアクセスがなかったため、最大1分ほどかかることがあります。このままお待ちください。'), 3000);
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 90000);
             try {
-                const response = await fetch(url, {
+                const res = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify(body),
+                    signal: controller.signal,
                 });
-                const data = await response.json().catch(() => ({}));
-                return { ok: response.ok, data, message: data.message };
+                const data = await res.json().catch(() => ({}));
+                clearMessage();
+                return { ok: res.ok, status: res.status, data, message: data.message, hint: data.hint };
             } catch (e) {
-                return { ok: false, message: 'サーバーに接続できませんでした' };
+                showMessage(e.name === 'AbortError' ? 'サーバーの応答がありません' : 'サーバーに接続できませんでした', 'error', '通信環境を確認して、もう一度お試しください。');
+                return null;
+            } finally {
+                clearTimeout(slow);
+                clearTimeout(timeout);
+                busy = false;
+                button.disabled = false;
+                button.classList.remove('loading');
+                label.textContent = original;
             }
         }
 
@@ -322,7 +356,6 @@
         // まだ無ければ、この端末の進行（同じユーザー名の場合だけ）を引き継いでサーバーに保存する。
         async function saveUser(serverUser) {
             if (GameSync.restore(serverUser)) return;
-
             const saved = JSON.parse(localStorage.getItem('user') || '{}');
             const sameUser = saved.username === serverUser.username;
             const { progress, ...plain } = serverUser;
@@ -335,10 +368,25 @@
             await GameSync.push(false);
         }
 
-        // Enter キーでログイン
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') handleLogin();
-        });
+        function switchAccount() {
+            localStorage.removeItem('user');
+            $('continue').style.display = 'none';
+            showTab('login');
+        }
+
+        // ---------- 開いた時 ----------
+        (function init() {
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || 'null');
+                if (user && user.id != null && user.username) {
+                    $('continue-name').textContent = user.username;
+                    $('continue').style.display = 'block';
+                }
+            } catch (e) { /* 読めなければ何もしない */ }
+            const last = localStorage.getItem('lastUsername');
+            if (last) $('login-name').value = last;
+            showTab(location.hash === '#register' ? 'register' : 'login');
+        })();
     </script>
 </body>
 </html>
