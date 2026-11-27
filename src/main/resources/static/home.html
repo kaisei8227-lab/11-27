@@ -437,7 +437,7 @@
         </div>
 
         <main class="main-content">
-            <div class="rank-match-emblem" onclick="location.href='rank_match.html'">
+            <div class="rank-match-emblem" onclick="location.href='battle_select.html?mode=rank'">
                 <div class="emblem-shape"></div>
                 <div class="emblem-content">
                     <div class="rank-badge-icon">🏆</div>
@@ -455,7 +455,7 @@
                     <span class="icon">🗺️</span>
                     <span>ソロプレイ</span>
                 </a>
-                <a href="#" class="nav-item" onclick="startBattle()">
+                <a href="battle_select.html" class="nav-item">
                     <span class="icon">⚔️</span>
                     <span>バトル</span>
                 </a>
@@ -570,11 +570,11 @@
             <div style="font-family:'Cinzel Decorative',serif;color:#c9a050;font-size:24px">BATTLE</div>
             <div id="battle-deck-info" style="color:#a792ba;font-size:14px"></div>
             <div class="mode-grid">
-                <div class="mode-card rank" onclick="location.href='rank_match.html'">
+                <div class="mode-card rank" onclick="location.href='battle_select.html?mode=rank'">
                     <div class="mode-icon">🏆</div><div class="mode-name">ランクマッチ</div>
                     <div class="mode-desc">他のプレイヤーと対戦してMPを競う（相手がいない時はCPUと対戦）</div>
                 </div>
-                <div class="mode-card free" onclick="location.href='battle.html'">
+                <div class="mode-card free" onclick="location.href='battle_select.html?mode=free'">
                     <div class="mode-icon">⚔️</div><div class="mode-name">フリーマッチ</div>
                     <div class="mode-desc">CPUと気軽に対戦（MPは変動しません／勝利でコイン+50）</div>
                 </div>

@@ -1852,6 +1852,12 @@ function startRank(opts = {}) {
 // ===================================================================
 document.addEventListener("DOMContentLoaded", () => {
     const board = $("board");
+    // 選んだステージ（盤面の背景）
+    if (typeof Stages !== "undefined") {
+        const stage = Stages.resolve();
+        board.style.background = stage.bg;
+        board.dataset.stage = stage.id;
+    }
     board.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);

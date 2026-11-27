@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <script src="js/sync.js"></script>
+    <script src="js/auth-check.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gothic Duel - バトル</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            min-height: 100vh; color: #f1e6cf; overflow-x: hidden;
+            font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+            background:
+                linear-gradient(180deg, rgba(10, 6, 4, 0.2), rgba(6, 4, 2, 0.85)),
+                radial-gradient(ellipse at 20% 10%, rgba(255, 190, 100, 0.25), transparent 40%),
+                radial-gradient(ellipse at 80% 15%, rgba(255, 190, 100, 0.18), transparent 35%),
+                repeating-linear-gradient(0deg, rgba(0,0,0,0.22) 0 2px, transparent 2px 46px),
+                repeating-linear-gradient(90deg, rgba(0,0,0,0.18) 0 2px, transparent 2px 64px),
+                linear-gradient(160deg, #5a4128 0%, #2b1e12 45%, #120c06 100%);
+            padding-bottom: 110px;
+        }
+        header { display: flex; align-items: center; gap: 14px; padding: 18px 26px; }
+        .back {
+            display: flex; align-items: center; gap: 14px; padding: 10px 28px 10px 16px; cursor: pointer; text-decoration: none;
+            background: linear-gradient(90deg, rgba(20, 30, 50, 0.9), rgba(20, 30, 50, 0.3) 85%, transparent);
+            color: #f1e6cf; font-size: 22px; letter-spacing: 6px; border-left: 3px solid #c9a050;
+        }
+        .back span { font-size: 26px; color: #c9a050; letter-spacing: 0; }
+
+        .panel {
+            margin: 30px 0 0 3%; display: grid; grid-template-columns: 200px 1fr; min-height: 520px;
+            border-top: 2px solid #c9a050; border-bottom: 2px solid #c9a050;
+            background: linear-gradient(100deg, rgba(120, 90, 30, 0.92), rgba(150, 115, 40, 0.88) 40%, rgba(110, 82, 28, 0.9));
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+        }
+        .modes { display: flex; flex-direction: column; background: rgba(0, 0, 0, 0.25); }
+        .mode {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; cursor: pointer;
+            border: 2px solid rgba(0, 0, 0, 0.3); color: #e8dcc0; font-size: 20px; letter-spacing: 4px; position: relative;
+            background: linear-gradient(160deg, rgba(40, 32, 20, 0.85), rgba(20, 16, 10, 0.9));
+            transition: background .2s;
+        }
+        .mode .ic { font-size: 64px; filter: drop-shadow(0 4px 6px rgba(0,0,0,.6)); opacity: .55; }
+        .mode.active { background: linear-gradient(160deg, #e8c25a, #a77a1a); color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,.6); }
+        .mode.active .ic { opacity: 1; }
+        .mode.active::after { content: "▶"; position: absolute; right: -14px; top: 50%; transform: translateY(-50%); color: #e8c25a; font-size: 18px; }
+
+        .content { display: grid; grid-template-columns: 1.25fr 1fr 230px; gap: 20px; padding: 26px 30px; position: relative; align-items: center; }
+        .content::before {
+            content: ""; position: absolute; right: 230px; top: 50%; transform: translateY(-50%); width: 420px; height: 420px; border-radius: 50%;
+            border: 1px solid rgba(255, 230, 160, 0.18); box-shadow: inset 0 0 0 40px rgba(255, 230, 160, 0.04); pointer-events: none;
+        }
+        .title { display: flex; align-items: center; gap: 12px; font-size: 30px; letter-spacing: 6px; color: #fff4d0; text-shadow: 0 2px 8px rgba(0,0,0,.5);
+            padding: 4px 40px 4px 10px; background: linear-gradient(90deg, rgba(60, 40, 10, 0.6), transparent); width: fit-content; }
+        .desc { margin: 18px 0 0 10px; font-size: 17px; line-height: 1.8; color: #fbf1d8; letter-spacing: 2px; }
+        .warn { margin: 26px 0 0 10px; font-size: 22px; color: rgba(255, 245, 220, 0.85); letter-spacing: 4px; min-height: 32px; }
+        .slots { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 30px; }
+        .slot-label { font-size: 18px; letter-spacing: 4px; padding: 6px 14px; border-left: 3px solid #fff4d0; background: linear-gradient(90deg, rgba(60, 40, 10, 0.55), transparent); margin-bottom: 12px; }
+        .slot {
+            height: 130px; border: 2px solid #e8d5a0; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            background: rgba(30, 28, 30, 0.85); color: #e8dcc0; font-size: 17px; letter-spacing: 3px; position: relative; overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,.6); transition: transform .15s, box-shadow .15s; text-align: center; padding: 10px;
+        }
+        .slot:hover { transform: translateY(-2px); box-shadow: inset 0 0 20px rgba(0,0,0,.6), 0 0 18px rgba(255, 230, 160, 0.5); }
+        .slot .deck-name { font-size: 20px; color: #fff4d0; }
+        .slot .deck-sub { font-size: 13px; color: #d8ccb0; margin-top: 6px; letter-spacing: 1px; }
+        .slot .sigil { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 54px; opacity: .35; }
+        .slot .stage-name { position: absolute; left: 0; right: 0; bottom: 0; padding: 4px; background: rgba(0,0,0,.55); font-size: 14px; letter-spacing: 2px; }
+        .slot .shuffle { position: absolute; left: 10px; top: 8px; font-size: 20px; }
+
+        .side { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; position: relative; z-index: 1; }
+        .emblem { width: 170px; height: 190px; filter: drop-shadow(0 10px 18px rgba(0,0,0,.6)); }
+        .rank-name { font-size: 54px; font-weight: 900; color: #fff0b8; text-shadow: 0 3px 0 #6b4a10, 0 0 18px rgba(255, 220, 120, 0.6); font-family: 'Times New Roman', serif; }
+        .mp-row { width: 100%; max-width: 360px; display: flex; justify-content: space-between; font-size: 30px; font-family: 'Times New Roman', serif; color: #fff4d0; text-shadow: 0 2px 4px rgba(0,0,0,.6); }
+        .bar { width: 100%; max-width: 360px; height: 14px; border-radius: 7px; background: rgba(0, 0, 0, 0.55); border: 1px solid rgba(255, 230, 160, 0.4); overflow: hidden; }
+        .bar div { height: 100%; background: linear-gradient(90deg, #2f6fd6, #6fb8ff); }
+        .next { width: 100%; max-width: 360px; text-align: right; font-size: 20px; font-family: 'Times New Roman', serif; color: #fff4d0; }
+        .group { display: flex; align-items: center; gap: 14px; margin-top: 10px; width: 100%; max-width: 360px; }
+        .group .gem { font-size: 46px; filter: drop-shadow(0 0 10px rgba(255,255,255,.3)); }
+        .group small { display: block; font-size: 15px; color: #fff4d0; opacity: .85; letter-spacing: 3px; }
+        .group b { font-size: 26px; letter-spacing: 4px; }
+
+        .cpu-opts { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 360px; }
+        .cpu-opts .lbl { font-size: 16px; letter-spacing: 3px; color: #fff4d0; }
+        .pills { display: flex; gap: 8px; flex-wrap: wrap; }
+        .pill { padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(255, 240, 200, 0.6); background: rgba(0,0,0,.35); color: #fff4d0; cursor: pointer; font-size: 15px; font-family: inherit; }
+        .pill.active { background: linear-gradient(135deg, #2f6fd6, #123a7a); border-color: #9fd0ff; }
+
+        .battle-btn {
+            position: relative; justify-self: center; align-self: end; margin-bottom: 30px; width: 210px; height: 210px; border-radius: 50%; cursor: pointer; z-index: 2;
+            border: 6px solid #2a2a2a; outline: 3px solid rgba(201, 160, 80, 0.8);
+            background: radial-gradient(circle at 50% 40%, #3d7fff, #0b2a8a 60%, #04103a);
+            box-shadow: 0 0 40px rgba(60, 120, 255, 0.6), inset 0 0 30px rgba(150, 200, 255, 0.4);
+            color: rgba(200, 225, 255, 0.95); font-size: 44px; letter-spacing: 6px; font-family: inherit; text-shadow: 0 0 12px rgba(120, 180, 255, 0.9);
+            transition: transform .15s, filter .15s;
+        }
+        .battle-btn:hover:not(:disabled) { transform: scale(1.05); filter: brightness(1.15); }
+        .battle-btn:disabled { filter: grayscale(.8) brightness(.6); cursor: not-allowed; }
+        .battle-btn .fmt { position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 15px; letter-spacing: 2px; padding: 4px 18px; white-space: nowrap;
+            background: linear-gradient(90deg, #1a2e5a, #2f4f8f, #1a2e5a); border: 1px solid #9fb8e8; clip-path: polygon(8% 0, 92% 0, 100% 50%, 92% 100%, 8% 100%, 0 50%); color: #e8f0ff; text-shadow: none; }
+
+        /* モーダル */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,.75); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+        .modal.open { display: flex; }
+        .modal-box { width: min(760px, 100%); max-height: 85vh; overflow: auto; background: linear-gradient(160deg, #2a1e10, #120c06); border: 2px solid #c9a050; border-radius: 12px; padding: 22px; }
+        .modal-box h3 { font-size: 22px; letter-spacing: 4px; color: #ffd76b; margin-bottom: 14px; }
+        .list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+        .item { border: 2px solid rgba(201,160,80,.45); border-radius: 8px; padding: 14px; cursor: pointer; background: rgba(0,0,0,.35); position: relative; min-height: 96px; }
+        .item:hover { border-color: #ffd76b; }
+        .item.sel { border-color: #6fb8ff; box-shadow: 0 0 14px rgba(111,184,255,.5); }
+        .item.invalid { opacity: .5; cursor: not-allowed; }
+        .item b { display: block; font-size: 17px; color: #fff4d0; }
+        .item small { color: #d8ccb0; font-size: 13px; }
+        .item .sg { position: absolute; right: 10px; top: 6px; font-size: 32px; opacity: .5; }
+        .stage-item { height: 110px; display: flex; align-items: flex-end; padding: 0; overflow: hidden; }
+        .stage-item span { width: 100%; padding: 6px; background: rgba(0,0,0,.6); font-size: 14px; text-align: center; color: #fff4d0; }
+        .modal-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 16px; }
+        .mbtn { padding: 10px 20px; border-radius: 8px; border: 1px solid #c9a050; background: transparent; color: #ffd76b; cursor: pointer; font-family: inherit; font-size: 15px; }
+
+        /* ボトムナビ */
+        nav.bottom { position: fixed; left: 50%; bottom: 0; transform: translateX(-50%); display: flex; gap: 6px; padding: 10px 24px 14px; z-index: 50;
+            background: linear-gradient(0deg, rgba(0,0,0,.85), rgba(0,0,0,.4)); border-radius: 18px 18px 0 0; }
+        nav.bottom a { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 14px; color: #d8ccb0; text-decoration: none; font-size: 14px; letter-spacing: 3px; }
+        nav.bottom a .i { font-size: 28px; }
+        nav.bottom a.active { color: #8fd0ff; text-shadow: 0 0 10px rgba(110, 190, 255, .8); }
+
+        @media (max-width: 1000px) {
+            .panel { grid-template-columns: 1fr; margin: 20px 10px 0; }
+            .modes { flex-direction: row; min-height: 110px; }
+            .mode .ic { font-size: 36px; }
+            .mode.active::after { display: none; }
+            .content { grid-template-columns: 1fr; }
+            .content::before { display: none; }
+            .battle-btn { margin: 30px auto 0; width: 170px; height: 170px; font-size: 34px; justify-self: center; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a class="back" href="home.html"><span>⟵</span>ランダムマッチ</a>
+    </header>
+
+    <section class="panel">
+        <div class="modes">
+            <div class="mode active" data-mode="rank"><div class="ic">🛡️</div>ランクマッチ</div>
+            <div class="mode" data-mode="free"><div class="ic">⚔️</div>フリーマッチ</div>
+        </div>
+        <div class="content">
+            <div>
+                <div class="title"><span id="mode-icon">🛡️</span><span id="mode-title">ランクマッチ</span></div>
+                <p class="desc" id="mode-desc"></p>
+                <div class="warn" id="warn"></div>
+                <div class="slots">
+                    <div>
+                        <div class="slot-label">使用デッキ</div>
+                        <div class="slot" id="deck-slot"></div>
+                    </div>
+                    <div>
+                        <div class="slot-label">ステージ</div>
+                        <div class="slot" id="stage-slot"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="side" id="side"></div>
+            <button class="battle-btn" id="battle-btn"><span class="fmt" id="fmt">ランクマッチ</span>バトル</button>
+        </div>
+    </section>
+
+    <div class="modal" id="modal" onclick="if (event.target.id === 'modal') closeModal()">
+        <div class="modal-box" id="modal-box"></div>
+    </div>
+
+    <nav class="bottom">
+        <a href="solo.html"><span class="i">🗺️</span>ソロ</a>
+        <a href="battle_select.html" class="active"><span class="i">⚔️</span>バトル</a>
+        <a href="twopick.html"><span class="i">🏛️</span>2Pick</a>
+        <a href="home.html"><span class="i">🏠</span>ホーム</a>
+        <a href="deck.html"><span class="i">🃏</span>カード</a>
+        <a href="park.html"><span class="i">🏰</span>パーク</a>
+    </nav>
+
+    <script src="js/rank_util.js"></script>
+    <script src="js/stages.js"></script>
+    <script>
+        const $ = (id) => document.getElementById(id);
+        const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+        const SIGIL = { 貴族: "♛", 怪物: "☠", 幽霊: "☾", 魔女: "✶", 人形: "♟", 狩人: "✚", 海賊: "⚓" };
+        const CLASSES = ["ランダム", "貴族", "怪物", "幽霊", "魔女", "人形", "狩人", "海賊"];
+        const MODES = {
+            rank: { icon: "🛡️", title: "ランクマッチ", url: "rank_match.html",
+                desc: "ランクをかけて争う<br>ランダムマッチング戦です<br><small style=\"font-size:14px;opacity:.85\">相手が見つからない時は CPU と対戦できます</small>" },
+            free: { icon: "⚔️", title: "フリーマッチ", url: "battle.html",
+                desc: "CPU と自由に対戦できます<br>MP は変動しません<br><small style=\"font-size:14px;opacity:.85\">勝利するとコイン +50</small>" },
+        };
+        let mode = new URLSearchParams(location.search).get("mode") === "free" ? "free" : "rank";
+
+        function decks() {
+            try { return JSON.parse(localStorage.getItem("userDecksList") || "[]"); } catch (e) { return []; }
+        }
+        const total = (d) => (d && d.cards ? d.cards.reduce((n, c) => n + (Number(c.count) || 0), 0) : 0);
+        function activeDeck() {
+            const list = decks();
+            const i = parseInt(localStorage.getItem("activeDeckIndex") || "0", 10);
+            const d = list[i];
+            return d && total(d) === 40 ? { deck: d, index: i } : null;
+        }
+
+        // ランクのエンブレム（ランク帯ごとに宝石の色を変える）
+        function emblemSvg(rankName) {
+            const tier = rankName.startsWith("Grand") ? "gm" : rankName.startsWith("Master") ? "master" : rankName.split(" ")[0].replace(/\d/g, "");
+            const gem = { Beginner: ["#7dffb0", "#1f8a4c"], D: ["#ffe27a", "#e08a00"], C: ["#ff8a8a", "#b0102a"], B: ["#bff4ff", "#2aa8d0"],
+                A: ["#e2b3ff", "#7b2fc0"], AA: ["#9fc8ff", "#1f4fc0"], master: ["#fff3a8", "#c08a00"], gm: ["#ffffff", "#c08aff"] }[tier] || ["#ffe27a", "#e08a00"];
+            return `<svg class="emblem" viewBox="0 0 170 190">
+                <defs><radialGradient id="g" cx="40%" cy="35%"><stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="${gem[0]}"/><stop offset="1" stop-color="${gem[1]}"/></radialGradient>
+                <linearGradient id="m" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3d6c0"/><stop offset=".5" stop-color="#a86a5a"/><stop offset="1" stop-color="#5a2e2a"/></linearGradient></defs>
+                <path d="M85 4 L104 26 L132 18 L126 46 L156 64 L128 84 L140 120 L106 112 L85 150 L64 112 L30 120 L42 84 L14 64 L44 46 L38 18 L66 26Z" fill="url(#m)" stroke="#3a1a18" stroke-width="2"/>
+                <ellipse cx="85" cy="78" rx="34" ry="46" fill="url(#g)" stroke="#5a2e2a" stroke-width="4"/>
+                <path d="M60 150 L85 140 L110 150 L100 176 L85 166 L70 176Z" fill="#2a3a6a" stroke="#c9a050" stroke-width="2"/>
+                ${tier === "master" || tier === "gm" ? '<path d="M62 18 L72 4 L85 14 L98 4 L108 18Z" fill="#ffd76b" stroke="#8a5a00"/>' : ""}
+            </svg>`;
+        }
+
+        function renderSide() {
+            const user = JSON.parse(localStorage.getItem("user") || "{}");
+            if (mode === "rank") {
+                const mp = user.mp || 0;
+                const info = getRankInfo(mp);
+                const row = RANK_TABLE.find((r) => r.name === info.name) || RANK_TABLE[0];
+                const span = Math.min(row.maxMp, 999999) - row.minMp + 1;
+                const pct = Math.min(100, ((mp - row.minMp) / span) * 100);
+                const group = getGroupInfo(user);
+                $("side").innerHTML = `
+                    ${emblemSvg(info.name)}
+                    <div class="rank-name">${esc(info.name)}</div>
+                    <div class="mp-row"><span>MP</span><span>${mp.toLocaleString()}</span></div>
+                    <div class="bar"><div style="width:${pct}%"></div></div>
+                    <div class="next">NEXT ${info.nextMp.toLocaleString()}</div>
+                    <div class="group"><span class="gem">${group.icon}</span><div><small>グループ</small><b style="color:${group.color}">${esc(group.name)}</b></div></div>`;
+            } else {
+                const diff = localStorage.getItem("aiDifficulty") || "normal";
+                const cls = localStorage.getItem("freeCpuClass") || "ランダム";
+                $("side").innerHTML = `
+                    <div class="cpu-opts">
+                        <div class="lbl">CPU の強さ</div>
+                        <div class="pills">${[["easy", "やさしい"], ["normal", "ふつう"], ["hard", "つよい"]].map(([k, v]) =>
+                            `<button class="pill ${k === diff ? "active" : ""}" data-diff="${k}">${v}</button>`).join("")}</div>
+                        <div class="lbl" style="margin-top:8px">相手のクラス</div>
+                        <div class="pills">${CLASSES.map((c) => `<button class="pill ${c === cls ? "active" : ""}" data-cls="${c}">${SIGIL[c] || "🎲"} ${c}</button>`).join("")}</div>
+                    </div>`;
+                document.querySelectorAll("[data-diff]").forEach((b) => b.onclick = () => { localStorage.setItem("aiDifficulty", b.dataset.diff); renderSide(); });
+                document.querySelectorAll("[data-cls]").forEach((b) => b.onclick = () => { localStorage.setItem("freeCpuClass", b.dataset.cls); renderSide(); });
+            }
+        }
+
+        function render() {
+            const m = MODES[mode];
+            document.querySelectorAll(".mode").forEach((el) => el.classList.toggle("active", el.dataset.mode === mode));
+            $("mode-icon").textContent = m.icon;
+            $("mode-title").textContent = m.title;
+            $("mode-desc").innerHTML = m.desc;
+            $("fmt").textContent = m.title;
+
+            const active = activeDeck();
+            if (active) {
+                const d = active.deck;
+                $("deck-slot").innerHTML = `<span class="sigil">${SIGIL[d.cls] || "✦"}</span><div style="padding-left:46px"><div class="deck-name">${esc(d.name)}</div><div class="deck-sub">${esc(d.cls || "")}・40枚</div></div>`;
+            } else {
+                $("deck-slot").innerHTML = "デッキを選択してください";
+            }
+            $("warn").textContent = active ? "" : "デッキが選択されていません";
+            $("battle-btn").disabled = !active;
+
+            const sel = Stages.selected();
+            const st = Stages.get(sel);
+            $("stage-slot").style.background = st ? st.bg : "linear-gradient(135deg, #2a2a32, #121216)";
+            $("stage-slot").innerHTML = st ? `<span class="stage-name">${esc(st.name)}</span>` : `<span class="shuffle">🔀</span><span>ランダム</span><span class="stage-name">ランダム</span>`;
+            renderSide();
+        }
+
+        // ---------- デッキ選択 ----------
+        function openDeckModal() {
+            const list = decks();
+            const cur = parseInt(localStorage.getItem("activeDeckIndex") || "0", 10);
+            $("modal-box").innerHTML = `<h3>デッキを選択</h3>
+                ${list.length ? `<div class="list">${list.map((d, i) => {
+                    const n = total(d);
+                    const ok = n === 40;
+                    return `<div class="item ${ok ? "" : "invalid"} ${ok && i === cur ? "sel" : ""}" data-i="${i}" data-ok="${ok}">
+                        <span class="sg">${SIGIL[d.cls] || "✦"}</span><b>${esc(d.name || `デッキ${i + 1}`)}</b>
+                        <small>${esc(d.cls || "")}・${n}枚${ok ? "" : "（40枚にしてください）"}</small></div>`;
+                }).join("")}</div>` : `<p style="line-height:1.8">まだデッキがありません。デッキ編成で40枚のデッキを作りましょう。</p>`}
+                <div class="modal-actions"><button class="mbtn" onclick="location.href='deck.html'">🃏 デッキ編成へ</button><button class="mbtn" onclick="closeModal()">閉じる</button></div>`;
+            document.querySelectorAll("[data-i]").forEach((el) => el.onclick = () => {
+                if (el.dataset.ok !== "true") return;
+                localStorage.setItem("activeDeckIndex", el.dataset.i);
+                closeModal();
+                render();
+            });
+            $("modal").classList.add("open");
+        }
+
+        // ---------- ステージ選択 ----------
+        function openStageModal() {
+            const sel = Stages.selected();
+            $("modal-box").innerHTML = `<h3>ステージを選択</h3>
+                <div class="list">
+                    <div class="item stage-item ${sel === "random" ? "sel" : ""}" data-s="random" style="background:linear-gradient(135deg,#2a2a32,#121216)"><span>🔀 ランダム</span></div>
+                    ${STAGES.map((s) => `<div class="item stage-item ${s.id === sel ? "sel" : ""}" data-s="${s.id}" style="background:${s.bg}"><span>${esc(s.name)}</span></div>`).join("")}
+                </div>
+                <div class="modal-actions"><span></span><button class="mbtn" onclick="closeModal()">閉じる</button></div>`;
+            document.querySelectorAll("[data-s]").forEach((el) => el.onclick = () => { Stages.select(el.dataset.s); closeModal(); render(); });
+            $("modal").classList.add("open");
+        }
+
+        function closeModal() { $("modal").classList.remove("open"); }
+
+        // ---------- 開始 ----------
+        document.querySelectorAll(".mode").forEach((el) => el.onclick = () => {
+            mode = el.dataset.mode;
+            history.replaceState(null, "", `?mode=${mode}`);
+            render();
+        });
+        $("deck-slot").onclick = openDeckModal;
+        $("stage-slot").onclick = openStageModal;
+        $("battle-btn").onclick = () => {
+            if (!activeDeck()) return openDeckModal();
+            if (mode === "free") {
+                const cls = localStorage.getItem("freeCpuClass") || "ランダム";
+                location.href = cls === "ランダム" ? "battle.html" : `battle.html?cpu=${encodeURIComponent(cls)}`;
+            } else {
+                location.href = MODES.rank.url;
+            }
+        };
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+        render();
+    </script>
+</body>
+</html>
