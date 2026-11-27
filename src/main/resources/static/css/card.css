@@ -239,3 +239,9 @@
 .cd-stats .c { color: #8fd0ff; } .cd-stats .a { color: #ffcf5a; } .cd-stats .h { color: #ff7d8f; }
 .cd-section { font-size: 12px; color: #c9a050; border-bottom: 1px solid #3d2f4d; padding-bottom: 2px; }
 .cd-text { font-size: 14px; line-height: 1.7; padding: 8px 10px; border-radius: 6px; background: rgba(15, 10, 23, 0.7); white-space: pre-wrap; }
+
+/* カードのイラスト（img/cards/ID.webp）。読み込めた時だけ紋章の上に重なる */
+.cv-art-img, .card .art .art-img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; object-position: center 25%; pointer-events: none; user-select: none;
+}

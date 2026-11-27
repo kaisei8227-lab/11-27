@@ -49,6 +49,7 @@ const CardView = {
             <div class="cv-art" style="--art:${CardView.art(card)}">
                 <div class="cv-glyph">${CardView.esc(card.name[0])}</div>
                 <div class="cv-sigil">${st.sigil}</div>
+                ${typeof cardArtImg === "function" ? cardArtImg(card, "cv-art-img") : ""}
             </div>
             <div class="cv-name">${CardView.esc(card.name)}</div>
             <div class="cv-gem cv-cost">${card.cost}</div>

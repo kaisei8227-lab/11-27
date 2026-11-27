@@ -299,6 +299,7 @@ function cardEl(card, where) {
         <div class="art" style="--art:${artOf(card)}">
             <div class="glyph">${esc(card.name[0])}</div>
             <div class="sigil">${st.sigil}</div>
+            ${typeof cardArtImg === "function" ? cardArtImg(card) : ""}
         </div>
         <div class="name">${esc(card.name)}</div>
         ${gems}${badges}`;
