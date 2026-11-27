@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gothic Duel - HOME</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=EB+Garamond:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'EB Garamond', serif;
+            background: #080d19;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        /* 背景レイヤー */
+        .bg-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 40%, rgba(45, 27, 78, 0.6) 0%, rgba(5, 8, 16, 0.95) 75%),
+                        linear-gradient(135deg, #091224 0%, #03060c 100%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 粒子背景 */
+        .particles {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(201, 160, 80, 0.25) 1.5px, transparent 1.5px);
+            background-size: 36px 36px;
+            animation: particleMove 20s linear infinite;
+            z-index: 2;
+            opacity: 0.65;
+            pointer-events: none;
+        }
+
+        @keyframes particleMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 360px 720px; }
+        }
+
+        /* UIレイヤー */
+        .ui-layer {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px 28px;
+        }
+
+        /* --- ヘッダー ＆ 左上ユーザーエリア --- */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .user-panel-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .user-info-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: linear-gradient(90deg, rgba(20, 15, 32, 0.95) 0%, rgba(35, 22, 55, 0.8) 100%);
+            padding: 10px 22px 10px 10px;
+            border-radius: 40px;
+            border: 2px solid rgba(201, 160, 80, 0.6);
+            box-shadow: 0 0 16px rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+        }
+
+        .avatar-circle {
+            width: 56px; height: 56px; border-radius: 50%;
+            background: linear-gradient(135deg, #3b2056, #12091c);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 28px; border: 2px solid #c9a050;
+            box-shadow: 0 0 12px rgba(201, 160, 80, 0.6);
+        }
+
+        .user-name {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 16px; font-weight: bold; color: #f1e6cf;
+        }
+
+        .level-text { font-size: 13px; color: #c9a050; margin-top: 3px; font-weight: bold; }
+
+        /* 左側バナー（キャンペーン / バトルパス） */
+        .sub-banner-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(90deg, rgba(25, 40, 75, 0.9) 0%, rgba(15, 20, 40, 0.7) 100%);
+            border: 1.5px solid rgba(92, 150, 245, 0.5);
+            border-radius: 22px;
+            padding: 8px 18px;
+            color: #85b3ff;
+            font-size: 13px;
+            font-weight: bold;
+            width: fit-content;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+
+        .badge-red {
+            background: #e53e3e; color: #fff; border-radius: 50%;
+            width: 20px; height: 20px; font-size: 11px;
+            display: flex; justify-content: center; align-items: center; font-weight: bold;
+        }
+
+        /* --- ヘッダー右側（通貨） --- */
+        .resources {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .resource-item {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(15, 10, 25, 0.9);
+            padding: 8px 18px; border-radius: 22px;
+            border: 1.5px solid rgba(201, 160, 80, 0.4);
+            backdrop-filter: blur(10px); font-size: 16px; font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        .gold { color: #ffd700; font-size: 20px; }
+        .gem { color: #00f0ff; font-size: 20px; }
+
+        .btn-top-menu {
+            background: rgba(22, 16, 35, 0.9);
+            border: 1.5px solid rgba(201, 160, 80, 0.5);
+            color: #c9a050; width: 48px; height: 48px; border-radius: 12px;
+            cursor: pointer; font-size: 24px; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        /* --- 右側縦型サブアクションメニュー --- */
+        .right-side-menu {
+            position: absolute; right: 28px; top: 100px;
+            display: flex; flex-direction: column; gap: 14px; z-index: 15;
+        }
+
+        .side-menu-btn {
+            width: 52px; height: 52px;
+            background: rgba(18, 12, 28, 0.9);
+            border: 1.5px solid rgba(201, 160, 80, 0.5);
+            border-radius: 12px; color: #c9a050;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 24px; cursor: pointer; backdrop-filter: blur(10px);
+            transition: all 0.2s; box-shadow: 0 6px 15px rgba(0,0,0,0.6);
+        }
+        .side-menu-btn:hover { border-color: #ffd700; transform: scale(1.1); background: #2b1a3a; color: #ffd700; }
+
+        /* --- メインコンテンツエリア --- */
+        .main-content {
+            position: absolute;
+            right: 120px;
+            bottom: 130px;
+            z-index: 10;
+        }
+
+        .rank-match-emblem {
+            width: 320px; height: 260px;
+            position: relative;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+        }
+
+        .emblem-shape {
+            position: absolute;
+            width: 220px; height: 220px;
+            transform: rotate(45deg);
+            background: linear-gradient(135deg, rgba(30, 80, 160, 0.9) 0%, rgba(10, 20, 50, 0.98) 100%);
+            border: 4px solid #ffd700;
+            box-shadow: 0 0 35px rgba(0, 240, 255, 0.9), inset 0 0 30px rgba(255, 215, 0, 0.6);
+            border-radius: 18px;
+            transition: 0.3s;
+        }
+
+        .rank-match-emblem:hover .emblem-shape {
+            transform: rotate(45deg) scale(1.08);
+            box-shadow: 0 0 50px rgba(0, 240, 255, 1), inset 0 0 40px rgba(255, 215, 0, 0.9);
+            border-color: #ffffff;
+        }
+
+        .emblem-content {
+            position: relative; z-index: 2;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .rank-badge-icon {
+            font-size: 56px;
+            filter: drop-shadow(0 0 15px rgba(255,215,0,0.9));
+            margin-bottom: -2px;
+        }
+
+        .rank-title {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 28px; font-weight: 900;
+            background: linear-gradient(180deg, #ffffff 0%, #ffd700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px rgba(0, 240, 255, 0.9);
+            letter-spacing: 2px;
+        }
+
+        .rank-subtitle {
+            font-size: 15px; color: #a2c497; font-weight: bold; margin-top: 4px;
+        }
+
+        .bottom-left-banner {
+            position: absolute; left: 28px; bottom: 110px; z-index: 10;
+            width: 260px; height: 80px;
+            background: linear-gradient(135deg, rgba(20, 15, 30, 0.95) 0%, rgba(40, 25, 60, 0.95) 100%);
+            border: 2px solid #c9a050; border-radius: 12px; padding: 12px 16px;
+            display: flex; align-items: center; gap: 14px; cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.7);
+        }
+
+        /* --- ボトムナビゲーションバー --- */
+        .bottom-nav-container {
+            width: 100%; display: flex; justify-content: center; z-index: 20;
+        }
+
+        .bottom-nav {
+            display: flex; justify-content: space-around; align-items: center;
+            background: rgba(12, 8, 20, 0.94);
+            border: 1.5px solid rgba(201, 160, 80, 0.4);
+            border-radius: 20px; padding: 10px 24px;
+            backdrop-filter: blur(18px);
+            box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.9);
+            width: 100%; max-width: 1000px;
+        }
+
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            padding: 8px 18px; border-radius: 10px; cursor: pointer;
+            color: #a792ba; transition: all 0.2s; font-size: 13px; font-weight: bold;
+            text-decoration: none;
+        }
+
+        .nav-item .icon { font-size: 26px; }
+        .nav-item:hover { color: #ffffff; background: rgba(255, 255, 255, 0.08); }
+
+        .nav-item.active {
+            color: #00f0ff;
+            background: linear-gradient(180deg, rgba(0, 240, 255, 0.2) 0%, rgba(0, 0, 0, 0) 100%);
+            border-bottom: 3px solid #00f0ff;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.9);
+        }
+
+        /* --- モーダル共通 --- */
+        .overlay-screen {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
+            z-index: 100; display: none; justify-content: center; align-items: center;
+        }
+
+        .menu-drawer {
+            position: absolute; right: 0; top: 0; width: 420px; height: 100vh;
+            background: rgba(10, 16, 26, 0.97); border-left: 2px solid #c9a050; padding: 20px;
+            display: flex; flex-direction: column; gap: 16px; box-shadow: -10px 0 40px rgba(0,0,0,0.9);
+            overflow-y: auto;
+        }
+
+        .drawer-header {
+            display: flex; justify-content: flex-end; align-items: center;
+        }
+
+        .drawer-profile-area {
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            padding-bottom: 15px; border-bottom: 1px solid rgba(201, 160, 80, 0.3);
+        }
+
+        .drawer-avatar {
+            width: 70px; height: 70px; border-radius: 50%; border: 3px solid #c9a050;
+            background: #1a1028; font-size: 36px; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 0 15px rgba(201,160,80,0.5);
+        }
+
+        .drawer-username {
+            font-family: 'Cinzel Decorative', serif; font-size: 16px; font-weight: bold; color: #f1e6cf;
+        }
+
+        .drawer-rank-text {
+            font-size: 13px; color: #a2c497; font-weight: bold;
+        }
+
+        .menu-grid-3x4 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .menu-tile-btn {
+            background: linear-gradient(145deg, #18283b, #0d1624);
+            border: 2px solid #4a668c;
+            outline: 1px solid #1a293d;
+            border-radius: 8px;
+            padding: 14px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+        }
+
+        .menu-tile-btn:hover {
+            border-color: #ffd700;
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+            background: linear-gradient(145deg, #233b57, #132033);
+        }
+
+        .menu-tile-icon { font-size: 26px; }
+        .menu-tile-label { font-size: 11px; font-weight: bold; color: #d8e4f0; text-align: center; line-height: 1.2; }
+
+        .gift-box {
+            width: 85%; max-width: 700px; height: 480px;
+            background: rgba(15, 10, 25, 0.96); border: 2px solid #c9a050; border-radius: 14px;
+            padding: 24px; text-align: center; display: flex; flex-direction: column; justify-content: space-between;
+        }
+
+        .mission-grid { display: flex; gap: 18px; justify-content: center; margin-top: 20px; }
+        .mission-card {
+            width: 200px; height: 240px; background: #181124; border: 1px solid #4a3e56;
+            border-radius: 10px; padding: 16px; display: flex; flex-direction: column;
+            justify-content: space-between; align-items: center;
+        }
+        .btn-claim {
+            width: 100%; padding: 8px 0; background: linear-gradient(135deg, #c9a050, #8a5a00);
+            border: none; border-radius: 6px; color: #000; font-weight: bold; font-size: 13px; cursor: pointer;
+        }
+        .btn-claim.claimed { background: #4a3e56; color: #8a7b9c; cursor: default; }
+        .btn-claim:disabled:not(.claimed) { background: #2a2238; color: #776c88; cursor: default; }
+        .mission-bar { width: 100%; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.08); overflow: hidden; }
+        .mission-bar > div { height: 100%; background: linear-gradient(90deg, #48bb78, #9ae6b4); }
+        .mode-grid { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .mode-card { width: 200px; padding: 20px 14px; border-radius: 14px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px;
+            border: 2px solid #c9a050; background: linear-gradient(160deg, #2b1a3a, #0d0914); transition: 0.2s; }
+        .mode-card:hover { transform: translateY(-6px); box-shadow: 0 0 30px rgba(255, 215, 0, 0.45); border-color: #ffd700; }
+        .mode-card.rank { background: linear-gradient(160deg, #1e3a6e, #0a1430); }
+        .mode-card.free { background: linear-gradient(160deg, #3a2a10, #120c04); }
+        .mode-card.solo { background: linear-gradient(160deg, #1f3a26, #08120a); }
+        .mode-icon { font-size: 44px; }
+        .mode-name { font-family: 'Shippori Mincho', serif; font-size: 20px; font-weight: 800; color: #ffd700; }
+        .mode-desc { font-size: 12px; color: #d8ccb0; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+    <div class="bg-layer"></div>
+    <div class="particles"></div>
+
+    <div class="ui-layer">
+
+        <!-- ヘッダーエリア -->
+        <header class="header">
+            <div class="user-panel-group">
+                <div class="user-info-card" onclick="location.href='profile.html'">
+                    <div class="avatar-circle" id="avatar-circle" style="overflow:hidden">🧙‍♂️</div>
+                    <div>
+                        <div id="player-name" class="user-name">プレイヤー</div>
+                        <div class="level-text" id="player-title"></div>
+                    </div>
+                </div>
+
+                <div class="sub-banner-btn" onclick="location.href='park.html'">
+                    <span>🏰 パークへ行く</span>
+                    <div class="badge-red" id="park-badge" style="display:none">!</div>
+                </div>
+
+                <div class="sub-banner-btn" style="border-color: rgba(201, 160, 80, 0.5); color: #ffd700;" onclick="location.href='battlepass.html'">
+                    <span id="bp-banner">バトルパス</span>
+                </div>
+            </div>
+
+            <div class="resources">
+                <div class="resource-item" title="コイン">
+                    <span class="gold">🪙</span>
+                    <span id="coin-count">0</span>
+                </div>
+                <div class="resource-item" title="バトルパスのレベル" onclick="location.href='battlepass.html'" style="cursor:pointer">
+                    <span class="gem">🎖️</span>
+                    <span id="gem-count">Lv.0</span>
+                </div>
+                <button class="btn-top-menu" onclick="openMenuDrawer()" title="メニュー">田</button>
+            </div>
+        </header>
+
+        <!-- 右側縦型サブメニュー（ショップへのリンク接続済み） -->
+        <div class="right-side-menu">
+            <button class="side-menu-btn" onclick="location.href='shop.html'" title="ショップ（着せ替え）">👗</button>
+            <button class="side-menu-btn" onclick="location.href='battlepass.html'" title="バトルパス">🎖️</button>
+            <button class="side-menu-btn" onclick="location.href='ranking.html'" title="ランキング">🏅</button>
+            <button class="side-menu-btn" onclick="openMissionModal()" title="ミッション">📜</button>
+            <button class="side-menu-btn" onclick="location.href='catalog.html'" title="カード図鑑">📖</button>
+        </div>
+
+        <div class="bottom-left-banner" onclick="location.href='park.html'">
+            <div id="home-avatar" style="width:56px"></div>
+            <div>
+                <div style="font-size:12px; color:#ffd700; font-weight:bold;">GOTHIC PARK</div>
+                <div style="font-size:14px; color:#fff; font-weight:bold;">みんなとチャット・ギルド</div>
+            </div>
+        </div>
+
+        <main class="main-content">
+            <div class="rank-match-emblem" onclick="location.href='rank_match.html'">
+                <div class="emblem-shape"></div>
+                <div class="emblem-content">
+                    <div class="rank-badge-icon">🏆</div>
+                    <div class="rank-title">ランクマッチ</div>
+                    <div class="rank-subtitle"><span id="rank-name-text">Beginner 0</span> (MP <span id="mp-text">0</span>)</div>
+                    <div class="rank-subtitle" id="active-deck-text" style="font-size:12px;color:#f1e6cf;margin-top:6px"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ボトムナビゲーションバー（ショップへのリンク接続済み） -->
+        <div class="bottom-nav-container">
+            <nav class="bottom-nav">
+                <a href="solo.html" class="nav-item">
+                    <span class="icon">🗺️</span>
+                    <span>ソロプレイ</span>
+                </a>
+                <a href="#" class="nav-item" onclick="startBattle()">
+                    <span class="icon">⚔️</span>
+                    <span>バトル</span>
+                </a>
+                <a href="twopick.html" class="nav-item">
+                    <span class="icon">🏛️</span>
+                    <span>2Pick</span>
+                </a>
+                <a href="#" class="nav-item active">
+                    <span class="icon">🏠</span>
+                    <span>ホーム</span>
+                </a>
+                <a href="deck.html" class="nav-item">
+                    <span class="icon">🃏</span>
+                    <span>カード</span>
+                </a>
+                <a href="park.html" class="nav-item">
+                    <span class="icon">🏰</span>
+                    <span>パーク</span>
+                </a>
+            </nav>
+        </div>
+
+    </div>
+
+    <!-- モーダル 1: メニュー引き出し -->
+    <div id="menu-drawer-overlay" class="overlay-screen" onclick="closeMenuDrawer()">
+        <div class="menu-drawer" onclick="event.stopPropagation()">
+            
+            <div class="drawer-header">
+                <button class="btn-top-menu" style="width:38px; height:38px; font-size:18px;" onclick="closeMenuDrawer()">✕</button>
+            </div>
+
+            <div class="drawer-profile-area">
+                <div class="drawer-avatar">🧙‍♂️</div>
+                <div id="drawer-username" class="drawer-username">プレイヤー</div>
+                <div id="drawer-rank" class="drawer-rank-text">Rank Beginner 0</div>
+            </div>
+
+            <!-- ドロワーメニュー内 (3×4 グリッド) - ショップタイル完備 -->
+            <div class="menu-grid-3x4">
+                <div class="menu-tile-btn" onclick="location.href='profile.html'">
+                    <span class="menu-tile-icon">👤</span>
+                    <span class="menu-tile-label">プロフィール</span>
+                </div>
+                <div class="menu-tile-btn" onclick="location.href='shop.html'" data-label="ショップ">
+                    <span class="menu-tile-icon">🛒</span>
+                    <span class="menu-tile-label">着せ替えショップ</span>
+                </div>
+                <div class="menu-tile-btn" onclick="location.href='catalog.html'">
+                    <span class="menu-tile-icon">📖</span>
+                    <span class="menu-tile-label">カード図鑑</span>
+                </div>
+
+                <div class="menu-tile-btn" onclick="location.href='puzzle.html'">
+                    <span class="menu-tile-icon">🧩</span><span class="menu-tile-label">パズル</span>
+                </div>
+                <div class="menu-tile-btn" onclick="location.href='ranking.html'" style="display:none">
+                    <span class="menu-tile-icon">📼</span>
+                    <span class="menu-tile-label">リプレイ</span>
+                </div>
+                <div class="menu-tile-btn" onclick="location.href='deck.html'">
+                    <span class="menu-tile-icon">🃏</span>
+                    <span class="menu-tile-label">デッキ編成</span>
+                </div>
+                <div class="menu-tile-btn" onclick="location.href='battlepass.html'">
+                    <span class="menu-tile-icon">🎖️</span><span class="menu-tile-label">バトルパス</span>
+                </div>
+                <div class="menu-tile-btn" onclick="location.href='ranking.html'">
+                    <span class="menu-tile-icon">🏅</span><span class="menu-tile-label">ランキング</span>
+                </div>
+                <div class="menu-tile-btn" onclick="location.href='park.html'">
+                    <span class="menu-tile-icon">🏰</span><span class="menu-tile-label">パーク</span>
+                </div>
+                <div class="menu-tile-btn" style="display:none" onclick="alert('カードキャラ小説（未実装）')">
+                    <span class="menu-tile-icon">📖</span>
+                    <span class="menu-tile-label">カードキャラ小説</span>
+                </div>
+
+                <div class="menu-tile-btn" style="display:none" onclick="alert('お知らせ（未実装）')">
+                    <span class="menu-tile-icon">ℹ️</span>
+                    <span class="menu-tile-label">情報</span>
+                </div>
+                <div class="menu-tile-btn" style="display:none" onclick="alert('公式サイト（未実装）')">
+                    <span class="menu-tile-icon">🌐</span>
+                    <span class="menu-tile-label">公式サイト</span>
+                </div>
+                <div class="menu-tile-btn" style="display:none" onclick="alert('友達招待（未実装）')">
+                    <span class="menu-tile-icon">✉️</span>
+                    <span class="menu-tile-label">友達招待</span>
+                </div>
+
+                <div class="menu-tile-btn" style="display:none" onclick="alert('設定画面（未実装）')">
+                    <span class="menu-tile-icon">⚙️</span>
+                    <span class="menu-tile-label">設定</span>
+                </div>
+                <div class="menu-tile-btn" style="display:none" onclick="alert('その他メニュー（未実装）')">
+                    <span class="menu-tile-icon">📂</span>
+                    <span class="menu-tile-label">その他メニュー</span>
+                </div>
+                <div class="menu-tile-btn" onclick="logout()" style="border-color: #9b2c2c;">
+                    <span class="menu-tile-icon">↩️</span>
+                    <span class="menu-tile-label" style="color:#feb2b2;">タイトルへ<br>戻る</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- モーダル: バトルメニュー（シャドバのバトル画面のようにモードを選ぶ） -->
+    <div id="battle-menu" class="overlay-screen" onclick="closeBattleMenu()">
+        <div class="gift-box" style="height:auto;gap:16px" onclick="event.stopPropagation()">
+            <div style="font-family:'Cinzel Decorative',serif;color:#c9a050;font-size:24px">BATTLE</div>
+            <div id="battle-deck-info" style="color:#a792ba;font-size:14px"></div>
+            <div class="mode-grid">
+                <div class="mode-card rank" onclick="location.href='rank_match.html'">
+                    <div class="mode-icon">🏆</div><div class="mode-name">ランクマッチ</div>
+                    <div class="mode-desc">他のプレイヤーと対戦してMPを競う（相手がいない時はCPUと対戦）</div>
+                </div>
+                <div class="mode-card free" onclick="location.href='battle.html'">
+                    <div class="mode-icon">⚔️</div><div class="mode-name">フリーマッチ</div>
+                    <div class="mode-desc">CPUと気軽に対戦（MPは変動しません／勝利でコイン+50）</div>
+                </div>
+                <div class="mode-card rank" onclick="location.href='twopick.html'" style="background:linear-gradient(160deg,#3a1e5a,#120a20)">
+                    <div class="mode-icon">🏛️</div><div class="mode-name">2Pick</div>
+                    <div class="mode-desc">選んだカードでデッキを作り、7勝を目指す</div>
+                </div>
+                <div class="mode-card free" onclick="location.href='puzzle.html'" style="background:linear-gradient(160deg,#1e3a4a,#08141a)">
+                    <div class="mode-icon">🧩</div><div class="mode-name">パズル</div>
+                    <div class="mode-desc">決められた盤面で、このターン中に勝つ方法を探す</div>
+                </div>
+                <div class="mode-card solo" onclick="location.href='solo.html'">
+                    <div class="mode-icon">🗺️</div><div class="mode-name">ソロ</div>
+                    <div class="mode-desc">ステージを順番に攻略してコインとMPを集める</div>
+                </div>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:center">
+                <button class="btn-top-menu" style="width:auto;padding:0 18px;font-size:14px" onclick="location.href='deck.html'">🃏 デッキ編成</button>
+                <button class="btn-top-menu" style="width:auto;padding:0 18px;font-size:14px" onclick="closeBattleMenu()">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- モーダル 2: ギフト -->
+    <div id="gift-modal" class="overlay-screen">
+        <div class="gift-box" style="height: 400px;">
+            <div style="font-family: 'Cinzel Decorative', serif; color: #c9a050; font-size: 24px;">GIFT</div>
+            <div style="color: #a792ba; margin-top: 40px; font-size: 15px;">ギフトはすべて受け取り済みです。</div>
+            <button class="btn-top-menu" style="width: 100%; margin-top: auto; border-radius: 8px; font-size: 15px;" onclick="closeGiftModal()">閉じる</button>
+        </div>
+    </div>
+
+    <!-- モーダル 3: デイリーミッション -->
+    <div id="mission-modal" class="overlay-screen">
+        <div class="gift-box">
+            <div style="font-family: 'Cinzel Decorative', serif; color: #c9a050; font-size: 24px;">TODAY'S MISSION</div>
+            <div class="mission-grid" id="mission-container"></div>
+            <div style="font-size: 13px; color: #a792ba; margin-top: 12px;">※ 毎日0時に新しいランダムミッション3つに更新されます</div>
+            <button class="btn-top-menu" style="width: 100%; margin-top: 12px; border-radius: 8px; font-size: 15px;" onclick="closeMissionModal()">閉じる</button>
+        </div>
+    </div>
+
+    <script src="js/sync.js"></script>
+    <script src="js/rank_util.js"></script>
+    <script src="js/missions.js"></script>
+    <script src="js/cosmetics.js"></script>
+    <script src="js/battlepass.js"></script>
+
+    <script>
+        // ミッションの内容と進み具合は js/missions.js で管理（バトル・デッキ保存・生成などで自動的に進む）
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUserData();
+        });
+
+        function loadUserData() {
+            const storedUser = localStorage.getItem('user');
+            if (!storedUser) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                let user = JSON.parse(storedUser);
+                const userMp = typeof user.mp === 'number' ? user.mp : 0;
+                const userCoin = typeof user.coin === 'number' ? user.coin : 0;
+
+                // 日付が変わっていたら新しいミッション3つに入れ替える
+                Missions.ensureToday(user);
+                localStorage.setItem('user', JSON.stringify(user));
+
+                const rankInfo = typeof getRankInfo === 'function' ? getRankInfo(userMp) : { name: 'Beginner 0', icon: '🟢' };
+
+                document.getElementById('coin-count').innerText = userCoin;
+                Cosmetics.ensure(user);
+                BattlePass.ensure(user);
+                localStorage.setItem('user', JSON.stringify(user));
+                const bpLv = BattlePass.level(user);
+                document.getElementById('gem-count').innerText = 'Lv.' + bpLv;
+                const unclaimed = Array.from({ length: bpLv }, (_, i) => i + 1).filter((n) => !user.battlePass.claimed.includes(n)).length;
+                document.getElementById('bp-banner').innerText = `バトルパス ${user.battlePass.season}（Lv.${bpLv}${unclaimed ? `・未受取 ${unclaimed}` : ''}）`;
+                document.getElementById('player-title').innerText = Cosmetics.titleName(user) || '称号なし';
+                document.getElementById('avatar-circle').innerHTML = Cosmetics.avatarSvg(Cosmetics.equipped(user), 54);
+                document.getElementById('home-avatar').innerHTML = Cosmetics.avatarSvg(Cosmetics.equipped(user), 56);
+                document.getElementById('active-deck-text').innerText = activeDeckLabel();
+                document.getElementById('player-name').innerText = user.username || 'プレイヤー';
+                document.getElementById('drawer-username').innerText = user.username || 'プレイヤー';
+                document.getElementById('drawer-rank').innerText = 'Rank ' + rankInfo.name;
+
+                document.getElementById('rank-name-text').innerText = rankInfo.name;
+                document.getElementById('mp-text').innerText = userMp;
+
+                renderMissions(user);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderMissions(user) {
+            const container = document.getElementById('mission-container');
+            container.innerHTML = '';
+            const claimed = user.claimedMissions || [];
+
+            user.dailyMissions.forEach((mission, index) => {
+                const isClaimed = claimed.includes(index);
+                const done = Missions.isDone(user, mission);
+                const now = Missions.progress(user, mission);
+                const card = document.createElement('div');
+                card.className = 'mission-card';
+                card.innerHTML = `
+                    <div style="font-size:11px; color:#48bb78;">難易度: ${mission.diff}</div>
+                    <div style="font-size:14px; color:#f1e6cf; text-align:center; line-height:1.5;">${mission.text}</div>
+                    <div style="width:100%">
+                        <div style="font-size:12px; color:#a792ba; text-align:right; margin-bottom:4px;">${now} / ${mission.goal}</div>
+                        <div class="mission-bar"><div style="width:${(now / mission.goal) * 100}%"></div></div>
+                    </div>
+                    <div style="font-size:14px; color:#ffd700; font-weight:bold;">🪙 ${Missions.REWARD} コイン</div>
+                    <button id="btn-mission-${index}" class="btn-claim ${isClaimed ? 'claimed' : ''}" ${isClaimed || !done ? 'disabled' : ''} onclick="claimMission(${index})">
+                        ${isClaimed ? '受取済み' : done ? '受け取る' : '未達成'}
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function claimMission(index) {
+            let user = Missions.ensureToday(JSON.parse(localStorage.getItem('user') || '{}'));
+            user.claimedMissions = user.claimedMissions || [];
+            const mission = user.dailyMissions[index];
+            if (!mission || user.claimedMissions.includes(index) || !Missions.isDone(user, mission)) return;
+
+            user.coin = (user.coin || 0) + Missions.REWARD;
+            user.claimedMissions.push(index);
+            localStorage.setItem('user', JSON.stringify(user));
+            if (typeof BattlePass !== 'undefined') BattlePass.add('mission');
+
+            document.getElementById('coin-count').innerText = user.coin;
+            renderMissions(user);
+        }
+
+        // 使用中のデッキ名（ホーム・バトルメニューに表示）
+        function activeDeckLabel() {
+            try {
+                const decks = JSON.parse(localStorage.getItem('userDecksList') || '[]');
+                const d = decks[parseInt(localStorage.getItem('activeDeckIndex') || '0', 10)];
+                const total = d ? (d.cards || []).reduce((s, c) => s + (Number(c.count) || 0), 0) : 0;
+                if (!d || total !== 40) return '使用中のデッキ：なし（デッキ編成で40枚のデッキを作ってください）';
+                return `使用中のデッキ：${d.name}${d.cls ? `（${d.cls}）` : ''}`;
+            } catch (e) {
+                return '';
+            }
+        }
+
+        // バトル: モード選択を開く
+        function startBattle() {
+            document.getElementById('battle-deck-info').innerText = activeDeckLabel();
+            document.getElementById('battle-menu').style.display = 'flex';
+        }
+        function closeBattleMenu() { document.getElementById('battle-menu').style.display = 'none'; }
+        // ログアウト: 進行をサーバーに保存してから、この端末のログイン情報を消す
+        async function logout() {
+            if (window.GameSync) await GameSync.push(false);
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        function openMenuDrawer() { document.getElementById('menu-drawer-overlay').style.display = 'flex'; }
+        function closeMenuDrawer() { document.getElementById('menu-drawer-overlay').style.display = 'none'; }
+        function openGiftModal() { document.getElementById('gift-modal').style.display = 'flex'; }
+        function closeGiftModal() { document.getElementById('gift-modal').style.display = 'none'; }
+        function openMissionModal() { document.getElementById('mission-modal').style.display = 'flex'; }
+        function closeMissionModal() { document.getElementById('mission-modal').style.display = 'none'; }
+    </script>
+</body>
+</html>

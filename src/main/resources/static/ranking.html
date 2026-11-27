@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <script src="js/sync.js"></script>
+    <script src="js/auth-check.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gothic Duel - ランキング</title>
+    <link rel="stylesheet" href="css/card.css">
+    <style>
+        main { max-width: 900px; margin: 0 auto; padding: 24px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { padding: 10px 12px; border-bottom: 1px solid rgba(201,160,80,.2); text-align: left; }
+        th { color: #c9a050; font-weight: 600; font-size: 13px; }
+        td.no { font-family: 'Cinzel Decorative', serif; color: #ffd700; width: 60px; }
+        tr.me td { background: rgba(255,215,0,.08); }
+        .t { color: #b98cff; font-size: 12px; display: block; }
+        .lead { color: #d8ccb0; line-height: 1.8; }
+        .err { color: #ff8a9a; }
+    </style>
+</head>
+<body class="gd-page">
+    <header class="gd-header">
+        <button class="gd-btn" onclick="location.href='home.html'">‹ ホームへ戻る</button>
+        <div class="gd-title">RANKING</div>
+        <div class="gd-spacer"></div>
+        <div class="gd-tabs" id="tabs">
+            <div class="gd-tab active" data-k="all">総合（MP）</div>
+            <div class="gd-tab" data-k="master">マスター</div>
+        </div>
+    </header>
+    <main>
+        <p class="lead">MP の多い順に上位100人を表示します。100,000MP でマスター、150,001MP 以上でグランドマスターです。</p>
+        <div id="body">読み込み中…</div>
+    </main>
+    <script src="js/rank_util.js"></script>
+    <script>
+        const me = JSON.parse(localStorage.getItem("user") || "{}");
+        let kind = "all";
+        const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+        async function load() {
+            document.getElementById("body").textContent = "読み込み中…";
+            try {
+                const res = await fetch(`/api/ranking?kind=${kind}`);
+                if (!res.ok) throw new Error();
+                const list = await res.json();
+                if (!list.length) {
+                    document.getElementById("body").innerHTML = `<p class="lead">${kind === "master" ? "まだマスターランクのプレイヤーはいません。" : "まだランキングがありません。"}</p>`;
+                    return;
+                }
+                document.getElementById("body").innerHTML = `<table><tr><th>順位</th><th>プレイヤー</th><th>ランク</th><th>MP</th><th>勝敗</th></tr>
+                    ${list.map((u, i) => `<tr class="${u.id === me.id ? "me" : ""}"><td class="no">${i + 1}</td>
+                        <td>${esc(u.username)}${u.title ? `<span class="t">${esc(u.title)}</span>` : ""}</td>
+                        <td>${getRankInfo(u.mp).icon} ${esc(getRankInfo(u.mp).name)}</td><td>${u.mp.toLocaleString()}</td><td>${u.wins}勝 ${u.losses}敗</td></tr>`).join("")}</table>`;
+            } catch (e) {
+                document.getElementById("body").innerHTML = '<p class="err">ランキングを読み込めませんでした（サーバーに接続できません）。</p>';
+            }
+        }
+        document.querySelectorAll("#tabs .gd-tab").forEach((t) => t.onclick = () => {
+            document.querySelectorAll("#tabs .gd-tab").forEach((x) => x.classList.toggle("active", x === t));
+            kind = t.dataset.k;
+            load();
+        });
+        load();
+    </script>
+</body>
+</html>

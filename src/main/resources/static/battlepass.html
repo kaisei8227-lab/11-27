@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <script src="js/sync.js"></script>
+    <script src="js/auth-check.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gothic Duel - バトルパス</title>
+    <link rel="stylesheet" href="css/card.css">
+    <style>
+        main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+        .top { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+        .lv { font-family: 'Cinzel Decorative', serif; font-size: 44px; color: #ffd700; }
+        .bar { flex: 1; min-width: 260px; }
+        .bar-track { height: 14px; border-radius: 7px; background: rgba(255,255,255,.08); overflow: hidden; }
+        .bar-fill { height: 100%; background: linear-gradient(90deg, #7b3fc4, #ffd76b); }
+        .muted { color: #a792ba; font-size: 13px; }
+        .lead { color: #d8ccb0; line-height: 1.8; }
+        .track { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 20px; }
+        .lvbox { padding: 12px; border-radius: 12px; border: 1px solid rgba(201,160,80,.3); background: rgba(20,12,30,.75); display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; min-height: 140px; }
+        .lvbox.special { border-color: #b98cff; box-shadow: 0 0 14px rgba(185,140,255,.35); }
+        .lvbox.locked { opacity: .45; }
+        .lvbox .n { font-family: 'Cinzel Decorative', serif; color: #c9a050; }
+        .lvbox .r { font-size: 13px; color: #f1e6cf; flex: 1; }
+        .done { color: #48bb78; font-size: 13px; font-weight: 800; }
+    </style>
+</head>
+<body class="gd-page">
+    <header class="gd-header">
+        <button class="gd-btn" onclick="location.href='home.html'">‹ ホームへ戻る</button>
+        <div class="gd-title">BATTLE PASS</div>
+        <div class="gd-spacer"></div>
+        <span class="gd-chip">🪙 <span id="coin">0</span></span>
+        <button class="gd-btn primary" id="claim-all">まとめて受け取る</button>
+    </header>
+    <main>
+        <div class="top">
+            <div><div class="muted">シーズン <span id="season"></span>（<span id="left"></span>）</div><div class="lv">Lv.<span id="lv">0</span></div></div>
+            <div class="bar">
+                <div class="bar-track"><div class="bar-fill" id="fill"></div></div>
+                <div class="muted" id="pt"></div>
+            </div>
+        </div>
+        <p class="lead">ランクマッチ勝利 +500pt／敗北 +150pt、2Pick 勝利 +400pt、フリー・ソロ勝利 +150pt、デイリーミッション1つ +1000pt。<br>
+        1000ptごとにレベルが上がり、報酬（コイン・称号・アバターの服やスリーブ）がもらえます。毎月1日に新しいシーズンが始まります。</p>
+        <div class="track" id="track"></div>
+    </main>
+    <script src="js/cosmetics.js"></script>
+    <script src="js/battlepass.js"></script>
+    <script>
+        const $ = (id) => document.getElementById(id);
+        function render() {
+            const user = BattlePass.ensure(Cosmetics.load());
+            const bp = user.battlePass;
+            const lv = BattlePass.level(user);
+            $("coin").textContent = user.coin || 0;
+            $("season").textContent = bp.season;
+            const days = Math.ceil((BattlePass.seasonEnd() - new Date()) / 86400000);
+            $("left").textContent = `残り${days}日`;
+            $("lv").textContent = lv;
+            const inLevel = lv >= BattlePass.MAX_LEVEL ? BattlePass.PER_LEVEL : bp.points % BattlePass.PER_LEVEL;
+            $("fill").style.width = `${(inLevel / BattlePass.PER_LEVEL) * 100}%`;
+            $("pt").textContent = lv >= BattlePass.MAX_LEVEL ? `最大レベル（合計 ${bp.points}pt）` : `次のレベルまで ${BattlePass.PER_LEVEL - inLevel}pt（合計 ${bp.points}pt）`;
+            $("track").innerHTML = Array.from({ length: BattlePass.MAX_LEVEL }, (_, i) => i + 1).map((n) => {
+                const r = BattlePass.reward(n);
+                const claimed = bp.claimed.includes(n);
+                const can = BattlePass.canClaim(user, n);
+                return `<div class="lvbox ${r.item ? "special" : ""} ${n > lv ? "locked" : ""}">
+                    <div class="n">Lv.${n}</div>
+                    <div class="r">${BattlePass.rewardLabel(r)}</div>
+                    ${claimed ? '<div class="done">✔ 受取済み</div>' : `<button class="gd-btn ${can ? "primary" : ""}" ${can ? "" : "disabled"} data-n="${n}">受け取る</button>`}
+                </div>`;
+            }).join("");
+            document.querySelectorAll("[data-n]").forEach((b) => b.onclick = () => { BattlePass.claim(Number(b.dataset.n)); render(); });
+        }
+        $("claim-all").onclick = () => {
+            for (let n = 1; n <= BattlePass.MAX_LEVEL; n++) BattlePass.claim(n);
+            render();
+        };
+        render();
+    </script>
+</body>
+</html>

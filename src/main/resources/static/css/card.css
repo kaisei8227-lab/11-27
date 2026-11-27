@@ -1,0 +1,241 @@
+/* css/card.css — バトル以外の画面で使うカードの見た目（バトル画面と同じデザイン） */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=EB+Garamond:wght@400..800&family=Shippori+Mincho:wght@600;800&display=swap');
+
+:root {
+    --gold: #c9a54c;
+    --gold-hi: #f3d98a;
+    --gold-lo: #7a5f22;
+    --text: #efe6cf;
+    --serif: "EB Garamond", "Shippori Mincho", "Yu Mincho", "Hiragino Mincho ProN", serif;
+    --title: "Cinzel Decorative", "EB Garamond", "Shippori Mincho", serif;
+    --cw: 120px; /* カードの幅（ページごとに上書き） */
+}
+
+.cv-card {
+    position: relative;
+    width: var(--cw);
+    aspect-ratio: 3 / 4;
+    border-radius: calc(var(--cw) * 0.1);
+    padding: calc(var(--cw) * 0.04);
+    background: linear-gradient(160deg, var(--gold-hi), var(--gold) 30%, var(--gold-lo) 70%, var(--gold));
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.7);
+    transition: transform 0.15s, box-shadow 0.15s, filter 0.2s;
+    user-select: none;
+    flex: none;
+}
+.cv-card.spell { background: linear-gradient(160deg, #e9d7ff, #9b6bd6 35%, #4b2a7a 70%, #9b6bd6); }
+.cv-card.ace { background: linear-gradient(160deg, #fff7d0, #ffcf4d 25%, #ff9ad9 50%, #8ad7ff 75%, #fff7d0); }
+.cv-card.semi { background: linear-gradient(160deg, #ffffff, #c9d6e6 40%, #7d8ea6 70%, #e8eef6); }
+.cv-card.evolved { box-shadow: 0 0 0 2px #ffcf4d, 0 0 18px rgba(255, 207, 77, 0.7); }
+.cv-card.dim { filter: grayscale(0.85) brightness(0.55); }
+.cv-art {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: calc(var(--cw) * 0.075);
+    overflow: hidden;
+    background: var(--art, #222);
+    box-shadow: inset 0 0 calc(var(--cw) * 0.2) rgba(0, 0, 0, 0.85);
+}
+.cv-glyph {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: "Shippori Mincho", serif;
+    font-size: calc(var(--cw) * 0.62);
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.13);
+    line-height: 1;
+}
+.cv-sigil { position: absolute; top: 6%; right: 8%; font-size: calc(var(--cw) * 0.16); color: rgba(243, 217, 138, 0.8); text-shadow: 0 0 4px #000; }
+.cv-name {
+    position: absolute;
+    left: 6%;
+    right: 6%;
+    bottom: 26%;
+    padding: 2% 3%;
+    font-family: "Shippori Mincho", serif;
+    font-size: calc(var(--cw) * 0.105);
+    font-weight: 800;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #fff3d6;
+    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.75) 15%, rgba(0,0,0,0.75) 85%, transparent);
+    text-shadow: 0 1px 2px #000;
+}
+.cv-gem {
+    position: absolute;
+    width: calc(var(--cw) * 0.3);
+    height: calc(var(--cw) * 0.3);
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 2px solid var(--gold-hi);
+    font-family: "Cinzel Decorative", serif;
+    font-size: calc(var(--cw) * 0.17);
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 0 3px #000, 0 1px 2px #000;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+    z-index: 2;
+}
+.cv-cost { left: -6%; top: -5%; background: radial-gradient(circle at 35% 30%, #a8dcff, #1d6fd1 60%, #062a5c); }
+.cv-atk { left: -6%; bottom: -5%; background: radial-gradient(circle at 35% 30%, #ffe08a, #d18a12 60%, #6b3e00); }
+.cv-hp { right: -6%; bottom: -5%; background: radial-gradient(circle at 35% 30%, #ff8a9a, #b3122e 60%, #4d0010); }
+.cv-gem.up { color: #8dff9e; }
+.cv-badge {
+    position: absolute;
+    top: 3%;
+    right: -4%;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.88);
+    border: 1px solid var(--gold);
+    color: #ffd700;
+    font-size: calc(var(--cw) * 0.1);
+    font-weight: bold;
+    z-index: 3;
+    white-space: nowrap;
+}
+.cv-emblem {
+    width: 1em;
+    height: 1em;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 2px solid var(--gold);
+    background: var(--emb);
+    color: rgba(243, 217, 138, 0.85);
+    font-size: inherit;
+    line-height: 1;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+/* ===== 画面共通（ヘッダー・ボタン・モーダル） ===== */
+.gd-page {
+    margin: 0;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 50% 35%, rgba(45, 27, 78, 0.55) 0%, rgba(5, 8, 16, 0.95) 75%),
+        linear-gradient(135deg, #091224 0%, #03060c 100%);
+    background-attachment: fixed;
+    color: var(--text);
+    font-family: var(--serif);
+}
+.gd-page * { box-sizing: border-box; }
+.gd-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 22px;
+    background: linear-gradient(180deg, rgba(15, 25, 45, 0.97), rgba(8, 14, 26, 0.95));
+    border-bottom: 1.5px solid #c9a050;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+}
+.gd-title { font-family: var(--title); font-size: 20px; color: #ffd700; letter-spacing: 1px; }
+.gd-spacer { flex: 1; }
+.gd-btn {
+    padding: 6px 16px;
+    border: 1px solid #c9a050;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #c9a050;
+    font-family: var(--serif);
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.15s;
+}
+.gd-btn:hover { background: rgba(201, 160, 80, 0.2); color: #ffe6a8; }
+.gd-btn.primary { background: linear-gradient(135deg, #c9a050, #8a5a00); border-color: #ffd700; color: #000; }
+.gd-btn.primary:hover { filter: brightness(1.1); }
+.gd-btn.danger { border-color: #e65c71; color: #ffb3c0; }
+.gd-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.gd-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border: 1px solid #c9a050;
+    border-radius: 14px;
+    background: rgba(12, 18, 28, 0.9);
+    font-weight: bold;
+    font-size: 14px;
+}
+.gd-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+}
+.gd-modal.open { display: flex; }
+.gd-modal-box {
+    max-width: 92vw;
+    max-height: 92vh;
+    overflow: auto;
+    padding: 22px;
+    border: 2px solid #c9a050;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #181124, #0d0914);
+    box-shadow: 0 0 35px rgba(201, 160, 80, 0.4);
+}
+.gd-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.gd-tab {
+    padding: 4px 14px;
+    border: 1px solid #3c5473;
+    border-radius: 14px;
+    background: rgba(20, 32, 50, 0.85);
+    color: #8ba880;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.gd-tab.active { background: linear-gradient(135deg, #c9a050, #8a5a00); border-color: #ffd700; color: #000; }
+.gd-cost-chip {
+    width: 28px;
+    height: 28px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid #3c5473;
+    background: rgba(20, 32, 50, 0.9);
+    color: #8fd0ff;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: pointer;
+}
+.gd-cost-chip.active { background: #2f8cff; color: #fff; border-color: #fff; box-shadow: 0 0 8px rgba(47, 140, 255, 0.6); }
+.gd-input {
+    padding: 7px 12px;
+    border: 1px solid #3c5473;
+    border-radius: 6px;
+    background: rgba(10, 16, 28, 0.9);
+    color: #f1e6cf;
+    font-family: var(--serif);
+    font-size: 14px;
+    outline: none;
+}
+.gd-input:focus { border-color: #ffd700; }
+
+/* カード詳細（図鑑・デッキ編成で共通） */
+.cd-detail { display: flex; gap: 22px; align-items: flex-start; }
+.cd-detail .cv-card { --cw: 230px; }
+.cd-info { width: 330px; display: flex; flex-direction: column; gap: 10px; }
+.cd-tags { display: flex; gap: 6px; flex-wrap: wrap; font-size: 12px; }
+.cd-tags span { padding: 2px 8px; border: 1px solid #5a486e; border-radius: 4px; background: #2a1f35; color: #d8c9ea; }
+.cd-name { font-family: "Shippori Mincho", serif; font-size: 24px; font-weight: 800; color: #ffd700; }
+.cd-stats { display: flex; gap: 16px; font-family: var(--title); font-size: 17px; }
+.cd-stats .c { color: #8fd0ff; } .cd-stats .a { color: #ffcf5a; } .cd-stats .h { color: #ff7d8f; }
+.cd-section { font-size: 12px; color: #c9a050; border-bottom: 1px solid #3d2f4d; padding-bottom: 2px; }
+.cd-text { font-size: 14px; line-height: 1.7; padding: 8px 10px; border-radius: 6px; background: rgba(15, 10, 23, 0.7); white-space: pre-wrap; }

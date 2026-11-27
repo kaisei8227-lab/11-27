@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <script src="js/sync.js"></script>
+    <script src="js/auth-check.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gothic Duel - パズル</title>
+    <link rel="stylesheet" href="css/card.css">
+    <style>
+        main { max-width: 900px; margin: 0 auto; padding: 24px; }
+        .lead { color: #d8ccb0; line-height: 1.8; }
+        .list { display: grid; gap: 14px; margin-top: 16px; }
+        .pz { display: flex; gap: 18px; align-items: center; padding: 16px 20px; border: 1px solid rgba(201,160,80,.4); border-radius: 12px; background: rgba(20,12,30,.75); }
+        .pz .no { font-family: 'Cinzel Decorative', serif; font-size: 28px; color: #c9a050; width: 48px; text-align: center; }
+        .pz .body { flex: 1; }
+        .pz h3 { margin: 0 0 4px; color: #ffd700; font-family: 'Shippori Mincho', serif; }
+        .pz p { margin: 0; color: #d8ccb0; font-size: 14px; }
+        .pz.clear { border-color: #48bb78; }
+        .badge { font-size: 12px; padding: 3px 10px; border-radius: 999px; background: #48bb78; color: #04210f; font-weight: 800; }
+    </style>
+</head>
+<body class="gd-page">
+    <header class="gd-header">
+        <button class="gd-btn" onclick="location.href='home.html'">‹ ホームへ戻る</button>
+        <div class="gd-title">PUZZLE</div>
+        <div class="gd-spacer"></div>
+        <span class="gd-chip" id="progress"></span>
+    </header>
+    <main>
+        <p class="lead">決められた盤面から、<b>このターン中に相手リーダーを倒せばクリア</b>です。ターン終了を押すと失敗。<br>
+        初めてクリアするとコイン +200。全問クリアで称号「詰めの名手」。困ったら盤面の「💡 AIアドバイス」も使えます。</p>
+        <div class="list" id="list"></div>
+    </main>
+    <script src="js/effects.js"></script>
+    <script src="js/cards.js"></script>
+    <script src="js/puzzles.js"></script>
+    <script>
+        const cleared = Puzzles.cleared();
+        document.getElementById("progress").textContent = `クリア ${cleared.length} / ${PUZZLES.length}`;
+        document.getElementById("list").innerHTML = PUZZLES.map((p) => `
+            <div class="pz ${cleared.includes(p.id) ? "clear" : ""}">
+                <div class="no">${p.id}</div>
+                <div class="body"><h3>${p.title} ${cleared.includes(p.id) ? '<span class="badge">CLEAR</span>' : ""}</h3><p>${p.goal}</p></div>
+                <button class="gd-btn primary" onclick="location.href='puzzle_battle.html?id=${p.id}'">挑戦する</button>
+            </div>`).join("");
+    </script>
+</body>
+</html>

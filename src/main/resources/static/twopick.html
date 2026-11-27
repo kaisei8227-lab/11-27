@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <script src="js/sync.js"></script>
+    <script src="js/auth-check.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gothic Duel - 2Pick</title>
+    <link rel="stylesheet" href="css/card.css">
+    <style>
+        main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+        .lead { color: #d8ccb0; line-height: 1.8; }
+        .class-row { display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
+        .class-opt { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 16px; border: 2px solid rgba(201,160,80,.4); border-radius: 14px; cursor: pointer; background: rgba(20,12,30,.7); --cw: 150px; transition: .2s; }
+        .class-opt:hover { border-color: #ffd700; transform: translateY(-4px); box-shadow: 0 0 24px rgba(255,215,0,.35); }
+        .class-opt h3 { margin: 0; color: #ffd700; font-family: 'Shippori Mincho', serif; }
+        .pairs { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+        .pair { display: flex; gap: 12px; padding: 18px; border: 2px solid rgba(201,160,80,.35); border-radius: 16px; cursor: pointer; background: rgba(20,12,30,.75); --cw: 140px; transition: .2s; }
+        .pair:hover { border-color: #ffd700; box-shadow: 0 0 26px rgba(255,215,0,.45); transform: translateY(-4px); }
+        .status { display: flex; gap: 18px; align-items: center; justify-content: center; flex-wrap: wrap; margin: 14px 0; }
+        .marks { display: flex; gap: 8px; }
+        .mark { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; border: 2px solid #555; color: #777; }
+        .mark.W { background: radial-gradient(circle, #ffe9a8, #b07a14); color: #2a1800; border-color: #ffd700; }
+        .mark.L { background: radial-gradient(circle, #ff8a9a, #6b0f1e); color: #fff; border-color: #ff4d6d; }
+        .deck-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; margin-top: 16px; }
+        .deck-row { display: flex; gap: 8px; align-items: center; padding: 6px 10px; border-radius: 8px; background: rgba(255,255,255,.04); font-size: 13px; }
+        .deck-row b { color: #8fd0ff; width: 22px; text-align: center; }
+        .center { text-align: center; }
+        .big { font-size: 22px; color: #ffd700; font-family: 'Shippori Mincho', serif; }
+        .curve { display: flex; gap: 6px; align-items: flex-end; height: 80px; justify-content: center; margin-top: 10px; }
+        .curve div { width: 26px; background: linear-gradient(0deg, #2f8cff, #8fd0ff); border-radius: 4px 4px 0 0; position: relative; }
+        .curve span { position: absolute; bottom: -18px; left: 0; right: 0; text-align: center; font-size: 11px; color: #a792ba; }
+    </style>
+</head>
+<body class="gd-page">
+    <header class="gd-header">
+        <button class="gd-btn" onclick="location.href='home.html'">‹ ホームへ戻る</button>
+        <div class="gd-title">2PICK</div>
+        <div class="gd-spacer"></div>
+        <button class="gd-btn danger" id="btn-retire" style="display:none">リタイア</button>
+    </header>
+    <main id="main"></main>
+
+    <script src="js/effects.js"></script>
+    <script src="js/cards.js"></script>
+    <script src="js/card-view.js"></script>
+    <script src="js/cosmetics.js"></script>
+    <script src="js/twopick.js"></script>
+    <script>
+        const $ = (id) => document.getElementById(id);
+        const esc = CardView.esc;
+
+        function render() {
+            const run = TwoPick.load();
+            $("btn-retire").style.display = run && run.state !== "done" ? "" : "none";
+            if (!run) return renderIntro();
+            if (run.state === "class") return renderClass(run);
+            if (run.state === "pick") return renderPick(run);
+            return renderRun(run);
+        }
+
+        function renderIntro() {
+            $("main").innerHTML = `
+                <div class="center">
+                    <div class="big">2Pick — 引き当てたカードで戦え</div>
+                    <p class="lead">提示される2枚1組のカードからどちらかを選ぶのを15回くり返して、30枚のデッキを作ります。<br>
+                    そのデッキで、<b>7勝</b>するか<b>2敗</b>するまで対戦できます。勝ち数に応じてコインがもらえ、7勝すると称号「二択の魔術師」を獲得！<br>
+                    手持ちのカードは関係ないので、誰でも同じ条件で遊べます。</p>
+                    <button class="gd-btn primary" id="btn-start" style="font-size:18px;padding:12px 40px">はじめる</button>
+                </div>`;
+            $("btn-start").onclick = () => { TwoPick.start(); render(); };
+        }
+
+        function renderClass(run) {
+            $("main").innerHTML = `
+                <div class="center big">クラスを選択</div>
+                <p class="lead center">3つのクラスから1つ選びます。表示されているエースは、最初の1枚としてデッキに入ります。</p>
+                <div class="class-row">${run.classOptions.map((o) => `
+                    <div class="class-opt" data-cls="${esc(o.cls)}">
+                        <h3>${CardView.style(o.cls).sigil} ${esc(o.cls)}</h3>
+                        ${CardView.html(CARD_MAP.get(o.ace))}
+                        <div style="font-size:12px;color:#a792ba">${esc(CardView.style(o.cls).theme)}</div>
+                    </div>`).join("")}</div>`;
+            document.querySelectorAll(".class-opt").forEach((el) => el.onclick = () => { TwoPick.chooseClass(run, el.dataset.cls); render(); });
+        }
+
+        function renderPick(run) {
+            const round = Math.floor(run.deck.length / 2) + 1;
+            $("main").innerHTML = `
+                <div class="status">
+                    <span class="gd-chip">${esc(run.cls)}</span>
+                    <span class="big">PICK ${Math.min(round, TwoPick.PICKS)} / ${TwoPick.PICKS}</span>
+                    <span class="gd-chip">デッキ ${run.deck.length} / 30</span>
+                    <button class="gd-btn" id="btn-reroll" ${run.rerolls <= 0 ? "disabled" : ""}>↻ 引き直し（残り${run.rerolls}回）</button>
+                </div>
+                <p class="lead center">どちらかの組を選んでください（2枚ともデッキに入ります）</p>
+                <div class="pairs">${run.offer.map((pair, i) => `
+                    <div class="pair" data-i="${i}">${pair.map((id) => CardView.html(CARD_MAP.get(id))).join("")}</div>`).join("")}</div>
+                ${deckSummary(run)}`;
+            document.querySelectorAll(".pair").forEach((el) => el.onclick = () => { TwoPick.pick(run, Number(el.dataset.i)); render(); });
+            $("btn-reroll").onclick = () => { TwoPick.reroll(run); render(); };
+        }
+
+        function deckSummary(run) {
+            const counts = new Map();
+            run.deck.forEach((id) => counts.set(id, (counts.get(id) || 0) + 1));
+            const rows = [...counts.entries()].map(([id, n]) => CARD_MAP.get(id)).sort((a, b) => a.cost - b.cost)
+                .map((c) => `<div class="deck-row"><span class="gd-cost-chip">${c.cost}</span>${esc(c.name)}<b>×${counts.get(c.id)}</b></div>`).join("");
+            const curve = [0, 1, 2, 3, 4, 5, 6, 7].map((n) => run.deck.filter((id) => n === 7 ? CARD_MAP.get(id).cost >= 7 : CARD_MAP.get(id).cost === n).length);
+            const max = Math.max(1, ...curve);
+            return `<div class="curve">${curve.map((v, i) => `<div style="height:${(v / max) * 70 + 2}px" title="${v}枚"><span>${i === 7 ? "7+" : i}</span></div>`).join("")}</div>
+                <div class="deck-list">${rows}</div>`;
+        }
+
+        function renderRun(run) {
+            const done = run.state === "done";
+            const marks = Array.from({ length: TwoPick.MAX_WINS + TwoPick.MAX_LOSSES - 1 }, (_, i) => run.results[i] || "");
+            let rewardHtml = "";
+            if (done) {
+                const r = run.rewarded ? TwoPick.reward(run) : TwoPick.claimReward();
+                rewardHtml = `<p class="big">終了！ ${run.wins}勝 ${run.losses}敗</p>
+                    <p class="lead">報酬: 🪙 ${r.coin} コイン${r.title ? "／称号「二択の魔術師」" : ""}</p>
+                    <button class="gd-btn primary" id="btn-new">もう一度挑戦する</button>`;
+            }
+            $("main").innerHTML = `
+                <div class="status">
+                    <span class="gd-chip">${esc(run.cls)}</span>
+                    <span class="big">${run.wins}勝 ${run.losses}敗</span>
+                    <div class="marks">${marks.map((m) => `<div class="mark ${m}">${m === "W" ? "勝" : m === "L" ? "負" : ""}</div>`).join("")}</div>
+                </div>
+                <div class="center">
+                    ${done ? rewardHtml : `<button class="gd-btn primary" id="btn-battle" style="font-size:18px;padding:12px 40px">⚔ 対戦する</button>
+                    <p class="lead">相手が見つからない時は CPU と対戦できます。</p>`}
+                </div>
+                ${deckSummary(run)}`;
+            if ($("btn-battle")) $("btn-battle").onclick = () => location.href = "twopick_battle.html";
+            if ($("btn-new")) $("btn-new").onclick = () => { TwoPick.start(); render(); };
+        }
+
+        $("btn-retire").onclick = () => {
+            const run = TwoPick.load();
+            if (!run || !confirm("リタイアしますか？（ここまでの勝ち数で報酬を受け取ります）")) return;
+            if (run.state === "battle") {
+                run.state = "done";
+                TwoPick.save(run);
+            } else {
+                TwoPick.clear();
+            }
+            render();
+        };
+        render();
+    </script>
+</body>
+</html>

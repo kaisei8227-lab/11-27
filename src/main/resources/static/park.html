@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <script src="js/sync.js"></script>
+    <script src="js/auth-check.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gothic Duel - パーク</title>
+    <link rel="stylesheet" href="css/card.css">
+    <link rel="stylesheet" href="css/park.css">
+</head>
+<body class="gd-page park-page">
+    <header class="gd-header">
+        <button class="gd-btn" onclick="location.href='home.html'">‹ ホームへ戻る</button>
+        <div class="gd-title">GOTHIC PARK</div>
+        <div class="gd-spacer"></div>
+        <span class="gd-chip" id="online">接続中…</span>
+        <button class="gd-btn" onclick="location.href='shop.html'">👗 着せ替え</button>
+    </header>
+    <main class="park-main">
+        <section class="plaza-wrap">
+            <div id="plaza" class="plaza">
+                <div class="moon"></div>
+                <div class="cathedral"></div>
+                <div class="fountain"></div>
+                <a class="sign" style="left:10%;top:62%" href="rank_match.html">🏆<span>ランクマッチ</span></a>
+                <a class="sign" style="left:28%;top:78%" href="twopick.html">🃏<span>2Pick</span></a>
+                <a class="sign" style="left:70%;top:78%" href="puzzle.html">🧩<span>パズル</span></a>
+                <a class="sign" style="left:88%;top:62%" href="battlepass.html">🎖️<span>バトルパス</span></a>
+                <a class="sign" style="left:86%;top:40%" href="ranking.html">📜<span>ランキング</span></a>
+                <a class="sign" style="left:13%;top:40%" href="shop.html">👗<span>ショップ</span></a>
+                <div id="avatars"></div>
+            </div>
+            <div class="emotes" id="emotes"></div>
+            <p class="hint">床をクリックすると移動します。看板をクリックすると各モードへ移動できます。</p>
+        </section>
+        <aside class="side">
+            <div class="gd-tabs side-tabs">
+                <div class="gd-tab active" data-tab="chat">チャット</div>
+                <div class="gd-tab" data-tab="guild">ギルド</div>
+            </div>
+            <div class="tab-body" id="tab-chat">
+                <div class="chat-log" id="chat-log"></div>
+                <form class="chat-form" id="chat-form">
+                    <input class="gd-input" id="chat-input" maxlength="100" placeholder="メッセージ（100文字まで）" autocomplete="off">
+                    <button class="gd-btn primary">送信</button>
+                </form>
+            </div>
+            <div class="tab-body hidden" id="tab-guild"></div>
+        </aside>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="js/cosmetics.js"></script>
+    <script src="js/missions.js"></script>
+    <script src="js/park.js"></script>
+</body>
+</html>

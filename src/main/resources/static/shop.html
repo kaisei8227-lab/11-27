@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <script src="js/sync.js"></script>
+    <script src="js/auth-check.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gothic Duel - ショップ</title>
+    <link rel="stylesheet" href="css/card.css">
+    <style>
+        main { display: grid; grid-template-columns: 300px 1fr; gap: 24px; max-width: 1200px; margin: 0 auto; padding: 24px; }
+        .preview { position: sticky; top: 80px; align-self: start; padding: 20px; border: 1px solid rgba(201,160,80,.4); border-radius: 16px; background: radial-gradient(circle at 50% 30%, #2b1a3a, #0d0914); text-align: center; }
+        .preview .name { color: #ffd700; font-family: 'Shippori Mincho', serif; font-size: 18px; margin-top: 8px; }
+        .preview .title { color: #b98cff; font-size: 13px; }
+        .sleeve-prev { width: 90px; height: 126px; margin: 14px auto 0; border-radius: 8px; border: 2px solid #c9a050; display: grid; place-items: center; color: rgba(255,215,107,.8); font-size: 34px; }
+        .items { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; margin-top: 14px; }
+        .it { padding: 14px; border-radius: 12px; border: 1px solid rgba(201,160,80,.3); background: rgba(20,12,30,.75); display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; }
+        .it.equipped { border-color: #48bb78; box-shadow: 0 0 12px rgba(72,187,120,.4); }
+        .it .nm { color: #f1e6cf; font-weight: 700; }
+        .it .sub { color: #a792ba; font-size: 12px; }
+        .swatch { width: 56px; height: 56px; border-radius: 50%; border: 2px solid #c9a050; display: grid; place-items: center; font-size: 26px; color: #ffd76b; background: #1a1226; }
+        .msg { min-height: 22px; color: #ffd76b; margin-top: 10px; }
+        .lead { color: #d8ccb0; font-size: 14px; line-height: 1.7; }
+        @media (max-width: 800px) { main { grid-template-columns: 1fr; } .preview { position: static; } }
+    </style>
+</head>
+<body class="gd-page">
+    <header class="gd-header">
+        <button class="gd-btn" onclick="location.href='home.html'">‹ ホームへ戻る</button>
+        <div class="gd-title">SHOP / 着せ替え</div>
+        <div class="gd-spacer"></div>
+        <span class="gd-chip">🪙 <span id="coin">0</span></span>
+    </header>
+    <main>
+        <aside class="preview">
+            <div id="avatar"></div>
+            <div class="name" id="pname"></div>
+            <div class="title" id="ptitle"></div>
+            <div class="sleeve-prev" id="sleeve"></div>
+            <div class="sub" style="color:#a792ba;font-size:12px;margin-top:6px">スリーブ（カードの裏面）</div>
+            <div class="msg" id="msg"></div>
+        </aside>
+        <section>
+            <p class="lead">カードはすべて最初から使えます。コインはアバターの着せ替え・スリーブ・称号に使えます。<br>持っているアイテムは「装備する」で反映（パーク・対戦相手にも見えます）。</p>
+            <div class="gd-tabs" id="tabs"></div>
+            <div class="items" id="items"></div>
+        </section>
+    </main>
+    <script src="js/cosmetics.js"></script>
+    <script>
+        const $ = (id) => document.getElementById(id);
+        const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+        let kind = "outfit";
+
+        function swatch(it) {
+            if (it.kind === "hairColor") return `<div class="swatch" style="background:${it.color}"></div>`;
+            if (it.kind === "outfit") return `<div class="swatch" style="background:${it.color};border-color:${it.trim}"></div>`;
+            if (it.kind === "sleeve") return `<div class="swatch" style="background:${it.bg};border-radius:8px;height:70px;width:50px">${it.mark}</div>`;
+            if (it.kind === "accessory") return `<div class="swatch">${it.icon || "–"}</div>`;
+            if (it.kind === "hair") return `<div class="swatch">${Cosmetics.avatarSvg({ ...Cosmetics.equipped(), hair: it.id, accessory: "acc_none" }, 46)}</div>`;
+            return `<div class="swatch">👑</div>`;
+        }
+
+        function render() {
+            const user = Cosmetics.load();
+            const eq = user.cosmetics.equipped;
+            $("coin").textContent = user.coin || 0;
+            $("avatar").innerHTML = Cosmetics.avatarSvg(eq, 180);
+            $("pname").textContent = user.username || "プレイヤー";
+            $("ptitle").textContent = Cosmetics.titleName(user);
+            const sl = Cosmetics.sleeveStyle(eq.sleeve);
+            $("sleeve").style.background = sl.background;
+            $("sleeve").textContent = sl.mark;
+            $("tabs").innerHTML = Object.entries(COSMETIC_KINDS).map(([k, v]) => `<div class="gd-tab ${k === kind ? "active" : ""}" data-k="${k}">${v}</div>`).join("");
+            document.querySelectorAll("#tabs .gd-tab").forEach((t) => t.onclick = () => { kind = t.dataset.k; render(); });
+            $("items").innerHTML = COSMETICS.filter((it) => it.kind === kind).map((it) => {
+                const owned = Cosmetics.owns(user, it.id);
+                const isEq = eq[it.kind] === it.id;
+                let action;
+                if (isEq) action = `<span class="sub" style="color:#48bb78">装備中</span>`;
+                else if (owned) action = `<button class="gd-btn" data-eq="${it.id}">装備する</button>`;
+                else if (it.price != null) action = `<button class="gd-btn primary" data-buy="${it.id}" ${(user.coin || 0) < it.price ? "disabled" : ""}>🪙 ${it.price} で購入</button>`;
+                else action = `<span class="sub">${it.pass ? "バトルパスの報酬" : esc(it.reward || "報酬で入手")}</span>`;
+                return `<div class="it ${isEq ? "equipped" : ""}">${swatch(it)}<div class="nm">${esc(it.name)}</div>${action}</div>`;
+            }).join("");
+            document.querySelectorAll("[data-buy]").forEach((b) => b.onclick = () => {
+                const r = Cosmetics.buy(b.dataset.buy);
+                $("msg").textContent = r.message;
+                if (r.ok) Cosmetics.equip(b.dataset.buy);
+                render();
+            });
+            document.querySelectorAll("[data-eq]").forEach((b) => b.onclick = () => { Cosmetics.equip(b.dataset.eq); $("msg").textContent = "装備しました"; render(); });
+        }
+        render();
+    </script>
+</body>
+</html>

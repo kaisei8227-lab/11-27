@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <script src="js/sync.js"></script>
+    <script src="/js/auth-check.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gothic Duel - カード図鑑</title>
+    <link rel="stylesheet" href="css/card.css">
+    <style>
+        .filters { position: sticky; top: 55px; z-index: 40; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 12px 22px; background: rgba(5, 10, 20, 0.92); border-bottom: 1px solid rgba(201, 160, 80, 0.25); }
+        .cost-chips { display: flex; gap: 4px; align-items: center; font-size: 12px; color: #8ba880; }
+        .count { padding: 12px 22px 0; font-size: 13px; color: #8ba880; }
+        .grid { padding: 20px 22px 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 26px 18px; --cw: 128px; justify-items: center; }
+        .item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+        .item:hover .cv-card { transform: translateY(-4px) scale(1.03); box-shadow: 0 0 0 2px #ffd700, 0 10px 20px rgba(0,0,0,0.7); }
+        .item .owned { font-size: 11px; color: #8fd0ff; }
+        .item .owned.none { color: #776c88; }
+        .nav { display: flex; gap: 10px; margin-top: 6px; }
+    </style>
+</head>
+<body class="gd-page">
+    <header class="gd-header">
+        <button class="gd-btn" onclick="location.href='home.html'">‹ ホームへ戻る</button>
+        <div class="gd-title">CARD CATALOG</div>
+        <div class="gd-spacer"></div>
+        <button class="gd-btn" onclick="location.href='deck.html'">🃏 デッキ編成</button>
+    </header>
+    <div class="filters">
+        <div class="gd-tabs" id="tabs"></div>
+        <div class="cost-chips" id="costs"></div>
+        <select class="gd-input" id="rarity">
+            <option value="">すべてのレアリティ</option>
+            <option value="エース">エース</option>
+            <option value="一般">一般</option>
+        </select>
+        <input class="gd-input" id="search" placeholder="カード名・効果で検索" style="width:220px">
+    </div>
+    <div class="count" id="count"></div>
+    <div class="grid" id="grid"></div>
+
+    <div class="gd-modal" id="modal"><div class="gd-modal-box" id="modal-box"></div></div>
+
+    <script src="js/effects.js"></script>
+    <script src="js/cards.js"></script>
+    <script src="js/card-view.js"></script>
+    <script>
+        const $ = (id) => document.getElementById(id);
+        const CLASSES = ["すべて", ...CardView.CLASSES, CLASS.NEUTRAL];
+        const ALL = CARD_DATABASE.filter((c) => !c.isToken);
+        let cls = "すべて";
+        let cost = "all";
+        let list = [];
+
+        function owned() { return (JSON.parse(localStorage.getItem("user") || "{}").ownedCards) || {}; }
+
+        function renderFilters() {
+            $("tabs").innerHTML = CLASSES.map((c) => `<div class="gd-tab ${c === cls ? "active" : ""}" data-c="${c}">${c}</div>`).join("");
+            const costs = ["all", 0, 1, 2, 3, 4, 5, 6, 7, "8+"];
+            $("costs").innerHTML = "コスト " + costs.map((c) => `<span class="gd-cost-chip ${String(c) === String(cost) ? "active" : ""}" data-c="${c}">${c === "all" ? "全" : c}</span>`).join("");
+        }
+        $("tabs").onclick = (e) => { const t = e.target.closest(".gd-tab"); if (t) { cls = t.dataset.c; renderFilters(); render(); } };
+        $("costs").onclick = (e) => {
+            const t = e.target.closest(".gd-cost-chip");
+            if (!t) return;
+            cost = t.dataset.c === "all" || t.dataset.c === "8+" ? t.dataset.c : Number(t.dataset.c);
+            renderFilters();
+            render();
+        };
+        $("search").oninput = render;
+        $("rarity").onchange = render;
+
+        function render() {
+            const kw = $("search").value.trim().toLowerCase();
+            const rar = $("rarity").value;
+            list = ALL.filter((c) => {
+                if (cls !== "すべて" && c.class !== cls) return false;
+                if (cost === "8+") { if (c.cost < 8) return false; } else if (cost !== "all" && c.cost !== cost) return false;
+                if (rar === "エース" && !c.isAce) return false;
+                if (rar === "一般" && c.isAce) return false;
+                if (kw && !c.name.toLowerCase().includes(kw) && !(c.desc || "").toLowerCase().includes(kw)) return false;
+                return true;
+            });
+            const own = owned();
+            $("count").textContent = `全 ${list.length} 枚`;
+            $("grid").innerHTML = list.map((c) => `<div class="item" data-id="${c.id}">${CardView.html(c)}</div>`).join("");
+        }
+        $("grid").onclick = (e) => { const it = e.target.closest(".item"); if (it) openDetail(Number(it.dataset.id)); };
+
+        function openDetail(id) {
+            let evolved = false;
+            const draw = () => {
+                const card = CARD_MAP.get(id);
+                const spell = card.type === TYPE.SPELL;
+                const idx = list.findIndex((c) => c.id === id);
+                $("modal-box").innerHTML = `<div class="cd-detail">
+                    ${CardView.html(card, { evolved })}
+                    <div class="cd-info">
+                        <div class="cd-tags"><span>No.${card.id}</span><span>${card.class}</span><span>${spell ? "魔法" : "クリーチャー"}</span><span>${card.rarity}</span></div>
+                        <div class="cd-name">${CardView.esc(card.name)}</div>
+                        <div class="cd-stats"><span class="c">コスト ${card.cost}</span>${spell ? "" : `<span class="a">⚔ ${card.attack + (evolved ? 2 : 0)}</span><span class="h">❤ ${card.hp + (evolved ? 2 : 0)}</span>`}</div>
+                        ${spell ? "" : `<div class="gd-tabs"><div class="gd-tab ${evolved ? "" : "active"}" data-a="normal">通常</div><div class="gd-tab ${evolved ? "active" : ""}" data-a="evo">進化後</div></div>`}
+                        <div class="cd-section">${evolved ? "進化時効果" : "効果"}</div>
+                        <div class="cd-text">${CardView.esc(evolved ? (card.evolveDesc || "攻撃力+2・体力+2、突進を得る") : (card.desc || "効果なし"))}</div>
+
+                        <div class="nav">
+                            <button class="gd-btn" data-a="prev" ${idx <= 0 ? "disabled" : ""}>‹ 前</button>
+                            <button class="gd-btn" data-a="next" ${idx >= list.length - 1 ? "disabled" : ""}>次 ›</button>
+                            <button class="gd-btn primary" data-a="close" style="margin-left:auto">閉じる</button>
+                        </div>
+                    </div></div>`;
+                $("modal").classList.add("open");
+                $("modal-box").onclick = (e) => {
+                    const b = e.target.closest("[data-a]");
+                    if (!b || b.disabled) return;
+                    const a = b.dataset.a;
+                    if (a === "normal") { evolved = false; draw(); }
+                    if (a === "evo") { evolved = true; draw(); }
+                    if (a === "prev") { id = list[idx - 1].id; evolved = false; draw(); }
+                    if (a === "next") { id = list[idx + 1].id; evolved = false; draw(); }
+                    if (a === "close") $("modal").classList.remove("open");
+                };
+            };
+            draw();
+        }
+        $("modal").addEventListener("click", (e) => { if (e.target.id === "modal") $("modal").classList.remove("open"); });
+        document.addEventListener("keydown", (e) => {
+            if (!$("modal").classList.contains("open")) return;
+            if (e.key === "Escape") $("modal").classList.remove("open");
+            if (e.key === "ArrowLeft") $("modal-box").querySelector("[data-a=prev]")?.click();
+            if (e.key === "ArrowRight") $("modal-box").querySelector("[data-a=next]")?.click();
+        });
+
+        renderFilters();
+        render();
+    </script>
+</body>
+</html>

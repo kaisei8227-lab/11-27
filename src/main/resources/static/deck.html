@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <script src="js/sync.js"></script>
+    <script src="/js/auth-check.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gothic Duel - デッキ編成</title>
+    <link rel="stylesheet" href="css/card.css">
+    <style>
+        body { overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        .view { flex: 1; min-height: 0; display: none; }
+        .view.active { display: flex; }
+
+        /* ===== デッキ一覧 ===== */
+        #view-list { flex-direction: column; align-items: center; padding: 30px; overflow-y: auto; }
+        .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; width: 100%; max-width: 1100px; }
+        .deck-tile {
+            position: relative; height: 150px; padding: 16px; border-radius: 12px; cursor: pointer;
+            border: 2px solid #4a668c; background: linear-gradient(145deg, #18283b, #0d1624);
+            display: flex; align-items: center; gap: 14px; transition: 0.15s; box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+        }
+        .deck-tile:hover { border-color: #ffd700; transform: translateY(-3px); }
+        .deck-tile .cv-emblem { font-size: 64px; }
+        .deck-tile .dt-name { font-size: 18px; font-weight: bold; color: #f1e6cf; font-family: "Shippori Mincho", serif; }
+        .deck-tile .dt-class { font-size: 13px; color: #a2c497; margin-top: 4px; }
+        .deck-tile .dt-count { font-family: var(--title); font-size: 16px; color: #ffd700; margin-top: 8px; }
+        .deck-tile .dt-count.ng { color: #ff7d8f; }
+        .deck-tile .dt-active { position: absolute; top: 10px; right: 10px; padding: 2px 10px; border-radius: 10px; background: #00a3cc; color: #001; font-size: 12px; font-weight: bold; }
+        .deck-tile.new { justify-content: center; border-style: dashed; color: #c9a050; font-size: 18px; font-weight: bold; }
+        .list-hint { color: #a792ba; font-size: 13px; margin: 0 0 20px; }
+
+        /* ===== クラス選択 ===== */
+        #view-class { flex-direction: column; align-items: center; justify-content: center; gap: 26px; padding: 20px; }
+        .class-title { font-family: var(--title); font-size: 26px; color: #ffd700; }
+        .class-grid { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; max-width: 1200px; }
+        .class-card {
+            width: 150px; height: 230px; border-radius: 14px; cursor: pointer; padding: 18px 10px;
+            display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;
+            border: 2px solid #c9a050; transition: 0.2s; box-shadow: 0 8px 20px rgba(0,0,0,0.7);
+        }
+        .class-card:hover { transform: translateY(-8px) scale(1.03); border-color: #fff; box-shadow: 0 0 30px rgba(255, 215, 0, 0.5); }
+        .class-card .cv-emblem { font-size: 80px; }
+        .class-card .cc-name { font-family: "Shippori Mincho", serif; font-size: 22px; font-weight: 800; color: #ffd700; }
+        .class-card .cc-theme { font-size: 12px; color: #e0d8e8; line-height: 1.4; }
+
+        /* ===== 編集 ===== */
+        #view-edit { min-height: 0; }
+        .pool-side { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 12px 18px; background: rgba(5, 10, 20, 0.7); border-bottom: 1px solid rgba(201, 160, 80, 0.25); }
+        .cost-chips { display: flex; gap: 4px; align-items: center; font-size: 12px; color: #8ba880; }
+        .pool-grid { flex: 1; overflow-y: auto; padding: 22px; display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 24px 18px; align-content: start; --cw: 112px; }
+        .pool-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+        .pool-item:hover .cv-card { transform: translateY(-4px); box-shadow: 0 0 0 2px #ffd700, 0 8px 18px rgba(0,0,0,0.7); }
+        .pool-item.maxed .cv-card { filter: brightness(0.5); }
+        .pool-item .owned { font-size: 11px; color: #8fd0ff; }
+        .pool-item .owned.none { color: #776c88; }
+        .pool-empty { color: #a792ba; padding: 40px; }
+
+        .deck-side { width: 330px; display: flex; flex-direction: column; border-left: 1.5px solid #c9a050; background: rgba(8, 10, 20, 0.92); }
+        .ds-head { padding: 14px; border-bottom: 1px solid rgba(201, 160, 80, 0.3); display: flex; flex-direction: column; gap: 10px; }
+        .ds-head .row { display: flex; align-items: center; gap: 10px; }
+        .ds-head .cv-emblem { font-size: 36px; }
+        .ds-head .gd-input { flex: 1; min-width: 0; }
+        .ds-total { font-family: var(--title); font-size: 26px; color: #ffd700; }
+        .ds-total.ng { color: #ff7d8f; }
+        .ds-breakdown { font-size: 12px; color: #a2c497; }
+        .curve { display: flex; align-items: flex-end; gap: 6px; height: 64px; padding-top: 4px; }
+        .curve .bar { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10px; color: #a2c497; }
+        .curve .fill-bg { width: 100%; height: 40px; background: rgba(255,255,255,0.07); border-radius: 2px; display: flex; align-items: flex-end; }
+        .curve .fill { width: 100%; background: linear-gradient(#5fb7ff, #1d6fd1); border-radius: 2px; transition: height 0.2s; }
+        .curve .num { width: 16px; height: 16px; border-radius: 50%; background: #1d334e; border: 1px solid #5c96f5; color: #fff; display: grid; place-items: center; font-weight: bold; }
+        .ds-list { flex: 1; overflow-y: auto; padding: 8px 10px; }
+        .ds-row {
+            display: flex; align-items: center; gap: 8px; height: 34px; margin-bottom: 4px; padding: 0 8px 0 4px; cursor: pointer;
+            border-radius: 6px; border: 1px solid rgba(201, 160, 80, 0.25);
+            background: linear-gradient(90deg, rgba(40, 30, 60, 0.9), rgba(15, 12, 25, 0.9));
+        }
+        .ds-row:hover { border-color: #ff7d8f; }
+        .ds-row .g { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: bold; color: #fff;
+            background: radial-gradient(circle at 35% 30%, #a8dcff, #1d6fd1 60%, #062a5c); border: 1px solid #f3d98a; flex: none; }
+        .ds-row .n { flex: 1; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: "Shippori Mincho", serif; }
+        .ds-row .n.ace { color: #ffd76a; }
+        .ds-row .c { font-family: var(--title); color: #ffd700; font-size: 13px; }
+        .ds-empty { color: #776c88; font-size: 13px; text-align: center; padding: 30px 10px; line-height: 1.7; }
+        .ds-actions { padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid rgba(201, 160, 80, 0.3); }
+        .ds-actions .gd-btn.primary { grid-column: span 2; padding: 10px; font-size: 16px; }
+
+        .craft-row { display: flex; gap: 8px; }
+        .craft-row button { flex: 1; }
+        .toast { position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%); padding: 10px 22px; border-radius: 20px; background: rgba(10, 8, 20, 0.95); border: 1px solid #c9a050; color: #ffe6a8; z-index: 300; display: none; }
+    </style>
+</head>
+<body class="gd-page">
+    <header class="gd-header">
+        <button class="gd-btn" id="btn-back">‹ 戻る</button>
+        <div class="gd-title" id="page-title">DECK</div>
+        <div class="gd-spacer"></div>
+        <button class="gd-btn" onclick="location.href='catalog.html'">📖 図鑑</button>
+        <div class="gd-chip" title="ガチャは無く、すべてのカードを自由に使えます" style="border-color:#48bb78;color:#9ae6b4">全カード使用可能</div>
+    </header>
+
+    <!-- デッキ一覧 -->
+    <section class="view" id="view-list">
+        <p class="list-hint">デッキを選んで編集、または使用するデッキに設定します（バトルでは「使用中」のデッキを使います）</p>
+        <div class="deck-grid" id="deck-grid"></div>
+    </section>
+
+    <!-- クラス選択 -->
+    <section class="view" id="view-class">
+        <div class="class-title">クラスを選択</div>
+        <div class="class-grid" id="class-grid"></div>
+        <div style="color:#a792ba;font-size:13px">デッキは「選んだクラス＋無所属」のカードで組みます</div>
+    </section>
+
+    <!-- 編集 -->
+    <section class="view" id="view-edit">
+        <div class="pool-side">
+            <div class="filters">
+                <div class="gd-tabs" id="pool-tabs"></div>
+                <div class="cost-chips" id="cost-chips">コスト</div>
+                <input class="gd-input" id="search" placeholder="カード名・効果で検索" style="width:220px">
+            </div>
+            <div class="pool-grid" id="pool-grid"></div>
+        </div>
+        <aside class="deck-side">
+            <div class="ds-head">
+                <div class="row"><span id="ds-emblem"></span><input class="gd-input" id="deck-name" maxlength="16"></div>
+                <div class="row" style="justify-content:space-between">
+                    <span class="ds-total" id="ds-total">0 / 40</span>
+                    <span class="ds-breakdown" id="ds-breakdown"></span>
+                </div>
+                <div class="curve" id="curve"></div>
+            </div>
+            <div class="ds-list" id="ds-list"></div>
+            <div class="ds-actions">
+                <button class="gd-btn" id="btn-auto">自動編成</button>
+                <button class="gd-btn" id="btn-clear">クリア</button>
+                <button class="gd-btn primary" id="btn-save">保存する</button>
+            </div>
+        </aside>
+    </section>
+
+    <div class="gd-modal" id="modal"><div class="gd-modal-box" id="modal-box"></div></div>
+    <div class="toast" id="toast"></div>
+
+    <script src="js/effects.js"></script>
+    <script src="js/cards.js"></script>
+    <script src="js/card-view.js"></script>
+    <script src="js/missions.js"></script>
+    <script>
+        const MAX_DECK = 40;
+        const MAX_SAME = 3;
+        const MAX_SLOTS = 9;
+        const $ = (id) => document.getElementById(id);
+
+        // デッキに入れられるカード（トークン以外）
+        const POOL = CARD_DATABASE.filter((c) => !c.isToken);
+
+        let decks = [];       // [{ name, cls, cards: [{ id, name, class, cost, type, attack, hp, count }] }]
+        let editSlot = -1;
+        let editClass = null;
+        let editCards = new Map(); // id → 枚数
+        let tab = "class";         // "class" | "neutral"
+        let costFilter = "all";
+        let view = "list";
+
+        function loadUser() { return JSON.parse(localStorage.getItem("user") || "{}"); }
+        function saveUser(u) { localStorage.setItem("user", JSON.stringify(u)); }
+        function owned(id) { return (loadUser().ownedCards || {})[id] || 0; }
+
+        function toast(msg) {
+            const t = $("toast");
+            t.textContent = msg;
+            t.style.display = "block";
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => { t.style.display = "none"; }, 1800);
+        }
+
+        // ---------- 保存データ ----------
+        function loadDecks() {
+            try { decks = JSON.parse(localStorage.getItem("userDecksList") || "[]"); } catch (e) { decks = []; }
+            decks = decks.filter(Boolean).map((d) => ({ ...d, cls: d.cls || classOfCards(d.cards || []) }));
+        }
+        function classOfCards(cards) {
+            const c = cards.map((x) => CARD_MAP.get(Number(x.id)) || CARD_DATABASE.find((d) => d.name === x.name)).find((x) => x && x.class !== CLASS.NEUTRAL);
+            return c ? c.class : null;
+        }
+        function deckTotal(d) { return (d.cards || []).reduce((s, c) => s + (Number(c.count) || 0), 0); }
+        function activeIndex() { return parseInt(localStorage.getItem("activeDeckIndex") || "0", 10); }
+        function persist() { localStorage.setItem("userDecksList", JSON.stringify(decks)); }
+
+        // ---------- 画面切り替え ----------
+        function show(v) {
+            view = v;
+            document.querySelectorAll(".view").forEach((el) => el.classList.toggle("active", el.id === `view-${v}`));
+            $("page-title").textContent = { list: "MY DECKS", class: "NEW DECK", edit: "DECK EDIT" }[v];
+            if (v === "list") renderList();
+            if (v === "class") renderClasses();
+        }
+        $("btn-back").onclick = () => {
+            if (view === "list") location.href = "home.html";
+            else if (view === "class") show("list");
+            else if (confirm("保存せずにデッキ一覧へ戻りますか？")) show("list");
+        };
+
+        // ---------- デッキ一覧 ----------
+        function renderList() {
+            const grid = $("deck-grid");
+            const active = activeIndex();
+            grid.innerHTML = decks.map((d, i) => {
+                const total = deckTotal(d);
+                return `<div class="deck-tile" data-i="${i}">
+                    ${CardView.emblem(d.cls || CLASS.NEUTRAL)}
+                    <div>
+                        <div class="dt-name">${CardView.esc(d.name || `デッキ ${i + 1}`)}</div>
+                        <div class="dt-class">${d.cls || "クラス未設定"}</div>
+                        <div class="dt-count ${total === MAX_DECK ? "" : "ng"}">${total} / ${MAX_DECK}</div>
+                    </div>
+                    ${i === active && total === MAX_DECK ? `<span class="dt-active">使用中</span>` : ""}
+                </div>`;
+            }).join("") + (decks.length < MAX_SLOTS ? `<div class="deck-tile new" data-new="1">＋ 新しいデッキを作る</div>` : "");
+            grid.onclick = (e) => {
+                const tile = e.target.closest(".deck-tile");
+                if (!tile) return;
+                if (tile.dataset.new) return show("class");
+                openDeckMenu(Number(tile.dataset.i));
+            };
+        }
+
+        function openDeckMenu(i) {
+            const d = decks[i];
+            const ok = deckTotal(d) === MAX_DECK;
+            openModal(`<div style="display:flex;flex-direction:column;gap:10px;min-width:280px;text-align:center">
+                <div style="font-size:42px">${CardView.emblem(d.cls || CLASS.NEUTRAL)}</div>
+                <div class="cd-name" style="font-size:20px">${CardView.esc(d.name)}</div>
+                <button class="gd-btn primary" data-a="edit">編集する</button>
+                <button class="gd-btn" data-a="use" ${ok ? "" : "disabled"}>このデッキを使う${ok ? "" : "（40枚で使えます）"}</button>
+                <button class="gd-btn danger" data-a="del">削除する</button>
+                <button class="gd-btn" data-a="close">閉じる</button></div>`, (a) => {
+                if (a === "edit") { closeModal(); startEdit(i, d.cls); }
+                if (a === "use") { localStorage.setItem("activeDeckIndex", String(i)); closeModal(); renderList(); toast(`「${d.name}」を使用中にしました`); }
+                if (a === "del" && confirm(`「${d.name}」を削除しますか？`)) {
+                    decks.splice(i, 1);
+                    const act = activeIndex();
+                    if (act === i) localStorage.setItem("activeDeckIndex", "0");
+                    else if (act > i) localStorage.setItem("activeDeckIndex", String(act - 1));
+                    persist(); closeModal(); renderList();
+                }
+                if (a === "close") closeModal();
+            });
+        }
+
+        // ---------- クラス選択 ----------
+        function renderClasses() {
+            $("class-grid").innerHTML = CardView.CLASSES.map((cls) => {
+                const st = CardView.style(cls);
+                return `<div class="class-card" data-cls="${cls}" style="background:linear-gradient(170deg, hsl(${st.hue} ${st.sat}% 22%), hsl(${st.hue} ${st.sat}% 6%))">
+                    ${CardView.emblem(cls)}<div class="cc-name">${cls}</div><div class="cc-theme">${st.theme}</div></div>`;
+            }).join("");
+            $("class-grid").onclick = (e) => {
+                const c = e.target.closest(".class-card");
+                if (c) startEdit(-1, c.dataset.cls);
+            };
+        }
+
+        // ---------- 編集 ----------
+        function startEdit(slot, cls) {
+            editSlot = slot;
+            editClass = cls;
+            editCards = new Map();
+            if (slot >= 0) {
+                for (const c of decks[slot].cards || []) {
+                    const data = CARD_MAP.get(Number(c.id)) || CARD_DATABASE.find((d) => d.name === c.name);
+                    if (data) editCards.set(data.id, (editCards.get(data.id) || 0) + (Number(c.count) || 0));
+                }
+                editClass = editClass || classOfCards(decks[slot].cards || []) || CLASS.NOBLE;
+            }
+            $("deck-name").value = slot >= 0 ? decks[slot].name : `${cls}デッキ`;
+            $("ds-emblem").innerHTML = CardView.emblem(editClass);
+            tab = "class";
+            costFilter = "all";
+            $("search").value = "";
+            show("edit");
+            renderTabs();
+            renderCostChips();
+            renderPool();
+            renderDeck();
+        }
+
+        function renderTabs() {
+            $("pool-tabs").innerHTML = `<div class="gd-tab ${tab === "class" ? "active" : ""}" data-t="class">${editClass}</div>
+                <div class="gd-tab ${tab === "neutral" ? "active" : ""}" data-t="neutral">無所属</div>`;
+            $("pool-tabs").onclick = (e) => {
+                const t = e.target.closest(".gd-tab");
+                if (!t) return;
+                tab = t.dataset.t;
+                renderTabs();
+                renderPool();
+            };
+        }
+
+        function renderCostChips() {
+            const costs = ["all", 0, 1, 2, 3, 4, 5, 6, 7, "8+"];
+            $("cost-chips").innerHTML = "コスト " + costs.map((c) =>
+                `<span class="gd-cost-chip ${String(costFilter) === String(c) ? "active" : ""}" data-c="${c}">${c === "all" ? "全" : c}</span>`).join("");
+            $("cost-chips").onclick = (e) => {
+                const c = e.target.closest(".gd-cost-chip");
+                if (!c) return;
+                costFilter = c.dataset.c === "all" || c.dataset.c === "8+" ? c.dataset.c : Number(c.dataset.c);
+                renderCostChips();
+                renderPool();
+            };
+        }
+        $("search").oninput = () => renderPool();
+
+        function filteredPool() {
+            const kw = $("search").value.trim().toLowerCase();
+            return POOL.filter((c) => {
+                if (c.class !== (tab === "class" ? editClass : CLASS.NEUTRAL)) return false;
+                if (costFilter === "8+") { if (c.cost < 8) return false; }
+                else if (costFilter !== "all" && c.cost !== costFilter) return false;
+                if (kw && !c.name.toLowerCase().includes(kw) && !(c.desc || "").toLowerCase().includes(kw)) return false;
+                return true;
+            }).sort((a, b) => a.cost - b.cost || a.id - b.id);
+        }
+
+        function renderPool() {
+            const list = filteredPool();
+            const user = loadUser();
+            const own = user.ownedCards || {};
+            $("pool-grid").innerHTML = list.length ? list.map((c) => {
+                const n = editCards.get(c.id) || 0;
+                const o = own[c.id] || 0;
+                return `<div class="pool-item ${n >= MAX_SAME ? "maxed" : ""}" data-id="${c.id}">
+                    ${CardView.html(c, { badge: n ? `×${n}` : null })}</div>`;
+            }).join("") : `<div class="pool-empty">条件に合うカードがありません</div>`;
+        }
+
+        $("pool-grid").addEventListener("click", (e) => {
+            const item = e.target.closest(".pool-item");
+            if (item) addCard(Number(item.dataset.id));
+        });
+        $("pool-grid").addEventListener("contextmenu", (e) => {
+            const item = e.target.closest(".pool-item");
+            if (!item) return;
+            e.preventDefault();
+            openDetail(CARD_MAP.get(Number(item.dataset.id)));
+        });
+        // スマホ: 長押しで詳細
+        let pressTimer = null;
+        $("pool-grid").addEventListener("touchstart", (e) => {
+            const item = e.target.closest(".pool-item");
+            if (!item) return;
+            pressTimer = setTimeout(() => openDetail(CARD_MAP.get(Number(item.dataset.id))), 500);
+        }, { passive: true });
+        ["touchend", "touchmove"].forEach((ev) => $("pool-grid").addEventListener(ev, () => clearTimeout(pressTimer), { passive: true }));
+
+        function total() { let t = 0; editCards.forEach((n) => { t += n; }); return t; }
+
+        function addCard(id) {
+            const card = CARD_MAP.get(id);
+            if (total() >= MAX_DECK) return toast("デッキは40枚までです");
+            if ((editCards.get(id) || 0) >= MAX_SAME) return toast("同じカードは3枚までです");
+            if (card.class !== editClass && card.class !== CLASS.NEUTRAL) return toast(`${editClass}デッキには入れられません`);
+            editCards.set(id, (editCards.get(id) || 0) + 1);
+            renderPool();
+            renderDeck();
+        }
+
+        function removeCard(id) {
+            const n = (editCards.get(id) || 0) - 1;
+            if (n <= 0) editCards.delete(id); else editCards.set(id, n);
+            renderPool();
+            renderDeck();
+        }
+
+        function renderDeck() {
+            const t = total();
+            $("ds-total").textContent = `${t} / ${MAX_DECK}`;
+            $("ds-total").classList.toggle("ng", t !== MAX_DECK);
+            let fol = 0, sp = 0;
+            const curve = new Array(9).fill(0);
+            editCards.forEach((n, id) => {
+                const c = CARD_MAP.get(id);
+                if (c.type === TYPE.SPELL) sp += n; else fol += n;
+                curve[Math.min(8, c.cost)] += n;
+            });
+            $("ds-breakdown").textContent = `クリーチャー ${fol} ／ 魔法 ${sp}`;
+            const max = Math.max(8, ...curve);
+            $("curve").innerHTML = curve.map((n, i) => `<div class="bar"><span>${n}</span>
+                <div class="fill-bg"><div class="fill" style="height:${(n / max) * 100}%"></div></div>
+                <span class="num">${i === 8 ? "8+" : i}</span></div>`).join("");
+
+            const rows = [...editCards.entries()].map(([id, n]) => ({ c: CARD_MAP.get(id), n }))
+                .sort((a, b) => a.c.cost - b.c.cost || a.c.id - b.c.id);
+            $("ds-list").innerHTML = rows.length ? rows.map(({ c, n }) => `<div class="ds-row" data-id="${c.id}" title="クリックで1枚外す（右クリックで詳細）">
+                <span class="g">${c.cost}</span><span class="n ${c.isAce ? "ace" : ""}">${CardView.esc(c.name)}</span><span class="c">×${n}</span></div>`).join("")
+                : `<div class="ds-empty">左のカードをクリックして<br>デッキに入れてください<br>（右クリック・長押しで詳細）</div>`;
+        }
+        $("ds-list").addEventListener("click", (e) => {
+            const row = e.target.closest(".ds-row");
+            if (row) removeCard(Number(row.dataset.id));
+        });
+        $("ds-list").addEventListener("contextmenu", (e) => {
+            const row = e.target.closest(".ds-row");
+            if (!row) return;
+            e.preventDefault();
+            openDetail(CARD_MAP.get(Number(row.dataset.id)));
+        });
+
+        // 自動編成: クラスのカード約32枚＋無所属約8枚を2〜3枚ずつ
+        $("btn-auto").onclick = () => {
+            const shuffle = (l) => [...l].sort(() => Math.random() - 0.5);
+            const classCards = shuffle(POOL.filter((c) => c.class === editClass));
+            const neutral = shuffle(POOL.filter((c) => c.class === CLASS.NEUTRAL));
+            editCards = new Map();
+            const fill = (list, limit) => {
+                for (const c of list) {
+                    if (total() >= limit) break;
+                    if (editCards.has(c.id)) continue;
+                    editCards.set(c.id, Math.min(Math.random() < 0.5 ? 2 : 3, limit - total()));
+                }
+            };
+            fill(classCards, 32);
+            fill(neutral, MAX_DECK);
+            fill(classCards, MAX_DECK);
+            renderPool();
+            renderDeck();
+        };
+        $("btn-clear").onclick = () => {
+            if (total() && !confirm("デッキのカードをすべて外しますか？")) return;
+            editCards = new Map();
+            renderPool();
+            renderDeck();
+        };
+        $("btn-save").onclick = () => {
+            const t = total();
+            if (t !== MAX_DECK && !confirm(`デッキが${t}枚です（バトルで使うには40枚必要です）。このまま保存しますか？`)) return;
+            const name = $("deck-name").value.trim() || `${editClass}デッキ`;
+            const cards = [...editCards.entries()].map(([id, count]) => {
+                const c = CARD_MAP.get(id);
+                return { id, name: c.name, class: c.class, cost: c.cost, type: c.type, attack: c.attack ?? 0, hp: c.hp ?? 0, count };
+            });
+            const deck = { name, cls: editClass, cards };
+            if (editSlot >= 0) decks[editSlot] = deck;
+            else { decks.push(deck); editSlot = decks.length - 1; }
+            if (t === MAX_DECK) localStorage.setItem("activeDeckIndex", String(editSlot));
+            persist();
+            Missions.add("deck_save");
+            toast(`「${name}」を保存しました`);
+            show("list");
+        };
+
+        // ---------- カード詳細・生成・分解 ----------
+        function openDetail(card) {
+            let evolved = false;
+            const draw = () => {
+                const user = loadUser();
+                const spell = card.type === TYPE.SPELL;
+                openModal(`<div class="cd-detail">
+                    ${CardView.html(card, { evolved })}
+                    <div class="cd-info">
+                        <div class="cd-tags"><span>${card.class}</span><span>${spell ? "魔法" : "クリーチャー"}</span><span>${card.rarity}</span></div>
+                        <div class="cd-name">${CardView.esc(card.name)}</div>
+                        <div class="cd-stats"><span class="c">コスト ${card.cost}</span>${spell ? "" : `<span class="a">⚔ ${card.attack + (evolved ? 2 : 0)}</span><span class="h">❤ ${card.hp + (evolved ? 2 : 0)}</span>`}</div>
+                        ${spell ? "" : `<div class="gd-tabs"><div class="gd-tab ${evolved ? "" : "active"}" data-a="normal">通常</div><div class="gd-tab ${evolved ? "active" : ""}" data-a="evo">進化後</div></div>`}
+                        <div class="cd-section">${evolved ? "進化時効果" : "効果"}</div>
+                        <div class="cd-text">${CardView.esc(evolved ? (card.evolveDesc || "攻撃力+2・体力+2、突進を得る") : (card.desc || "効果なし"))}</div>
+
+                        ${view === "edit" ? `<button class="gd-btn primary" data-a="add">デッキに入れる</button>` : ""}
+                        <button class="gd-btn" data-a="close">閉じる</button>
+                    </div></div>`, (a) => {
+                    if (a === "normal") { evolved = false; draw(); }
+                    if (a === "evo") { evolved = true; draw(); }
+                    if (a === "add") { addCard(card.id); }
+                    if (a === "close") closeModal();
+                });
+            };
+            draw();
+        }
+
+        function closeModal() { $("modal").classList.remove("open"); }
+        $("modal").addEventListener("click", (e) => { if (e.target.id === "modal") closeModal(); });
+
+        // ---------- 開始 ----------
+        loadDecks();
+        show("list");
+    </script>
+</body>
+</html>
